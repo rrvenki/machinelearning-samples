@@ -26,16 +26,20 @@ To solve this problem, first we will build an ML model. Then we will train the m
 
 Building a model includes: uploading data (`sentiment-imdb-train.txt` with `TextLoader`), transforming the data so it can be used effectively by an ML algorithm (with `TextFeaturizer`), and choosing a learning algorithm (`FastTreeBinaryClassifier`). All of those steps are stored in a `LearningPipeline`:
 ```VB
-// LearningPipeline holds all steps of the learning process: data, transforms, learners.  
+' LearningPipeline holds all steps of the learning process: data, transforms, learners.  
 Dim pipeline As New LearningPipeline
-// The TextLoader loads a dataset. The schema of the dataset is specified by passing a class containing
-// all the column names and their types.
-pipeline.Add(New TextLoader(TrainDataPath).CreateFrom(Of SentimentData)())
-// TextFeaturizer is a transform that will be used to featurize an input column to format and clean the data.
+' The TextLoader loads a dataset. The schema of the dataset is specified by passing a class containing
+' all the column names and their types.
+pipeline.Add((New TextLoader(TrainDataPath)).CreateFrom(Of SentimentData)())
+' TextFeaturizer is a transform that will be used to featurize an input column to format and clean the data.
 pipeline.Add(New TextFeaturizer("Features", "SentimentText"))
-// FastTreeBinaryClassifier is an algorithm that will be used to train the model.
-// It has three hyperparameters for tuning decision tree performance. 
-pipeline.Add(New FastTreeBinaryClassifier With {NumLeaves = 5, NumTrees = 5, MinDocumentsInLeafs = 2})
+' FastTreeBinaryClassifier is an algorithm that will be used to train the model.
+' It has three hyperparameters for tuning decision tree performance. 
+pipeline.Add(New FastTreeBinaryClassifier With {
+    .NumLeaves = 5,
+    .NumTrees = 5,
+    .MinDocumentsInLeafs = 2
+})
 ```
 ### 2. Train model
 Training the model is a process of running the chosen algorithm on a training data (with known sentiment values) to tune the parameters of the model. It is implemented in the `Train()` API. To perform training we just call the method and provide the types for our data object `SentimentData` and  prediction object `SentimentPrediction`.
@@ -45,7 +49,7 @@ Dim model = pipeline.Train(Of SentimentData, SentimentPrediction)()
 ### 3. Evaluate model
 We need this step to conclude how accurate our model operates on new data. To do so, the model from the previous step is run against another dataset that was not used in training (`sentiment-yelp-test.txt`). This dataset also contains known sentiments. `BinaryClassificationEvaluator` calculates the difference between known fares and values predicted by the model in various metrics.
 ```VB
-Dim testData = New TextLoader(TestDataPath).CreateFrom(Of SentimentData)()
+Dim testData = (New TextLoader(TestDataPath)).CreateFrom(Of SentimentData)()
 
 Dim evaluator = New BinaryClassificationEvaluator()
 Dim metrics = evaluator.Evaluate(model, testData)
@@ -69,10 +73,12 @@ Friend Shared ReadOnly Sentiments As IEnumerable(Of SentimentData) = {
     New SentimentData With {
         .SentimentText = "Contoso's 11 is a wonderful experience",
         .Sentiment = 0
-    }, New SentimentData With {
+    },
+    New SentimentData With {
         .SentimentText = "The acting in this movie is very bad",
         .Sentiment = 0
-    }, New SentimentData With {
+    },
+    New SentimentData With {
         .SentimentText = "Joe versus the Volcano Coffee Company is a great film.",
         .Sentiment = 0
     }

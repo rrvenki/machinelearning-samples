@@ -37,23 +37,22 @@ To solve this problem, first we will build an ML model. Then we will train the m
 Building a model includes: uploading data (`iris-train.txt` with `TextLoader`), transforming the data so it can be used effectively by an ML algorithm (with `ColumnConcatenator`), and choosing a learning algorithm (`StochasticDualCoordinateAscentClassifier`). All of those steps are stored in a `LearningPipeline`:
 ```VB
 ' LearningPipeline holds all steps of the learning process: data, transforms, learners.
+' Transforms
+' like in this example, no extra actions required.
+' Label:   values that should be predicted. If you have a field named Label in your data type,
+' If you don’t have it, copy the column you want to predict with ColumnCopier transform:
+' new ColumnCopier(("FareAmount", "Label"))
+' Features: all data used for prediction. At the end of all transforms you need to concatenate
+' all columns except the one you want to predict into Features column with
+' ColumnConcatenator transform:
 ' The TextLoader loads a dataset. The schema of the dataset is specified by passing a class containing
 ' all the column names and their types.
 ' When ML model starts training, it looks for two columns: Label and Features.
-' Transforms
-'              like in this example, no extra actions required.
-' Label:   values that should be predicted. If you have a field named Label in your data type,
-'          If you don’t have it, copy the column you want to predict with ColumnCopier transform:
-'              new ColumnCopier(("FareAmount", "Label"))
-' Features: all data used for prediction. At the end of all transforms you need to concatenate
-'              all columns except the one you want to predict into Features column with
-'              ColumnConcatenator transform:
-
 ' StochasticDualCoordinateAscentClassifier is an algorithm that will be used to train the model.
-Dim pipeline As New LearningPipeline From {
-    New TextLoader(TrainDataPath).CreateFrom(Of IrisData)(),
+Dim pipeline = New LearningPipeline From {
+    (New TextLoader(TrainDataPath)).CreateFrom(Of IrisData)(),
     New ColumnConcatenator("Features", "SepalLength", "SepalWidth", "PetalLength", "PetalWidth"),
-    New StochasticDualCoordinateAscentClassifier()
+    New StochasticDualCoordinateAscentClassifier() 
 }
 ```
 ### 2. Train model
@@ -64,9 +63,9 @@ Dim model = pipeline.Train(Of IrisData, IrisPrediction)()
 ### 3. Evaluate model
 We need this step to conclude how accurate our model operates on new data. To do so, the model from the previous step is run against another dataset that was not used in training (`iris-test.txt`). This dataset also contains known iris types. `ClassificationEvaluator` calculates the difference between known types and values predicted by the model in various metrics.
 ```VB
-Dim testData = New TextLoader(TestDataPath).CreateFrom(Of IrisData)()
+Dim testData = (New TextLoader(TestDataPath)).CreateFrom(Of IrisData)()
 
-Dim evaluator = New ClassificationEvaluator With {OutputTopKAcc = 3}
+Dim evaluator = New ClassificationEvaluator With {.OutputTopKAcc = 3}
 Dim metrics = evaluator.Evaluate(model, testData)
 ```
 >*To learn more on how to understand the metrics, check out the Machine Learning glossary from the [ML.NET Guide](https://docs.microsoft.com/en-us/dotnet/machine-learning/) or use any available materials on data science and machine learning*.
@@ -76,20 +75,20 @@ If you are not satisfied with the quality of the model, there are a variety of w
 After the model is trained, we can use the `Predict()` API to predict the probability that this flower belongs to each iris type. 
 
 ```VB
-Dim prediction = model.Predict(TestIrisData.Iris1)
+ Dim prediction = model.Predict(TestIrisData.Iris1)
 
-Console.WriteLine($"Actual: setosa.     Predicted probability: setosa:      {prediction.Score(0):0.####}")
-Console.WriteLine($"                                           versicolor:  {prediction.Score(1):0.####}")
-Console.WriteLine($"                                           virginica:   {prediction.Score(2):0.####}")
+ Console.WriteLine($"Actual: setosa.     Predicted probability: setosa:      {prediction.Score(0):0.####}")
+ Console.WriteLine($"                                           versicolor:  {prediction.Score(1):0.####}")
+ Console.WriteLine($"                                           virginica:   {prediction.Score(2):0.####}")
 ```
 Where `TestIrisData.Iris1` stores the information about the flower we'd like to predict the type for.
 ```VB
 Friend Class TestIrisData
-    Friend Shared ReadOnly Iris1 As New IrisData With {
-        .SepalLength = 5.1F,
-        .SepalWidth = 3.3F,
-        .PetalLength = 1.6F,
-        .PetalWidth = 0.2F
+    Friend Shared ReadOnly Iris1 As New IrisData() With {
+        .SepalLength = 3.3F,
+        .SepalWidth = 1.6F,
+        .PetalLength = 0.2F,
+        .PetalWidth= 5.1F
     }
     ' (...)
 End Class

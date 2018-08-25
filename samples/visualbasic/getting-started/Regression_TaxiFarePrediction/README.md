@@ -33,44 +33,40 @@ Building a model includes: uploading data (`taxi-fare-train.csv` with `TextLoade
 ```VB
 ' LearningPipeline holds all steps of the learning process: data, transforms, learners.
 ' The TextLoader loads a dataset. The schema of the dataset is specified by passing a class containing
-' all the column names and their types.
+' all the column names and their types. This will be used to create the model, and train it.
+
 ' Transforms
 ' When ML model starts training, it looks for two columns: Label and Features.
 ' Label:   values that should be predicted. If you have a field named Label in your data type,
 '              no extra actions required.
-'          If you don't have it, like in this example, copy the column you want to predict with
+'          If you don’t have it, like in this example, copy the column you want to predict with
 '              ColumnCopier transform:
+
 ' CategoricalOneHotVectorizer transforms categorical (string) values into 0/1 vectors
+
 ' Features: all data used for prediction. At the end of all transforms you need to concatenate
 '              all columns except the one you want to predict into Features column with
-'              ColumnConcatenator transform:
+'              ColumnConcatenator transform:       
 ' FastTreeRegressor is an algorithm that will be used to train the model.
-Dim pipeline As New LearningPipeline From {
-    New TextLoader(TrainDataPath).CreateFrom(Of TaxiTrip)(separator:=","c),
+Dim pipeline = New LearningPipeline From {
+    (New TextLoader(TrainDataPath)).CreateFrom(Of TaxiTrip)(separator:=","c),
     New ColumnCopier(("FareAmount", "Label")),
-    New CategoricalOneHotVectorizer("VendorId",
-        "RateCode",
-        "PaymentType"),
-    New ColumnConcatenator("Features",
-        "VendorId",
-        "RateCode",
-        "PassengerCount",
-        "TripDistance",
-        "PaymentType"),
+    New CategoricalOneHotVectorizer("VendorId", "RateCode", "PaymentType"),
+    New ColumnConcatenator("Features", "VendorId", "RateCode", "PassengerCount", "TripDistance", "PaymentType"),
     New FastTreeRegressor()
 }
 ```
 ### 2. Train model
 Training the model is a process of running the chosen algorithm on a training data (with known fare values) to tune the parameters of the model. It is implemented in the `Train()` API. To perform training we just call the method and provide the types for our data object `TaxiTrip` and  prediction object `TaxiTripFarePrediction`.
 ```VB
-Dim model = pipeline.Train(Of TaxiTrip, TaxiTripFarePrediction)
+Dim model = pipeline.Train(Of TaxiTrip, TaxiTripFarePrediction)()
 ```
 ### 3. Evaluate model
 We need this step to conclude how accurate our model operates on new data. To do so, the model from the previous step is run against another dataset that was not used in training (`taxi-fare-test.csv`). This dataset also contains known fares. `RegressionEvaluator` calculates the difference between known fares and values predicted by the model in various metrics.
 ```VB
-Dim testData = New TextLoader(TestDataPath).CreateFrom(Of TaxiTrip)(separator:=","c)
+Dim testData = (New TextLoader(TestDataPath)).CreateFrom(Of TaxiTrip)(separator:= ","c)
 
-Dim evaluator = New RegressionEvaluator()     
+Dim evaluator = New RegressionEvaluator()
 Dim metrics = evaluator.Evaluate(model, testData)
 ```
 >*To learn more on how to understand the metrics, check out the Machine Learning glossary from the [ML.NET Guide](https://docs.microsoft.com/en-us/dotnet/machine-learning/) or use any available materials on data science and machine learning*.
@@ -90,7 +86,7 @@ Where `TestTaxiTrips.Trip1` stores the information about the trip we'd like to g
 
 ```VB
 Friend Class TestTaxiTrips
-    Friend Shared ReadOnly Trip1 As New TaxiTrip With {
+    Friend Shared ReadOnly Trip1 As TaxiTrip = New TaxiTrip With {
         .VendorId = "VTS",
         .RateCode = "1",
         .PassengerCount = 1,

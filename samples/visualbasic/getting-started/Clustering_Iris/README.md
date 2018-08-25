@@ -32,18 +32,16 @@ Building a model includes: uploading data (`iris-full.txt` with `TextLoader`), t
 ' all the column names and their types.
 ' ColumnConcatenator concatenates all columns into Features column
 ' KMeansPlusPlusClusterer is an algorithm that will be used to build clusters. We set the number of clusters to 3.
-Dim pipeline As New LearningPipeline From {
-    New TextLoader(DataPath).CreateFrom(Of IrisData)(useHeader:=True),
-    New ColumnConcatenator("Features", "SepalLength", "SepalWidth", "PetalLength", "PetalWidth"),
-    New KMeansPlusPlusClusterer With {
-        .K = 3
-    }
+Dim pipeline = New LearningPipeline From {
+	 (New TextLoader(DataPath)).CreateFrom(Of IrisData)(useHeader:= True),
+	 New ColumnConcatenator("Features", "SepalLength", "SepalWidth", "PetalLength", "PetalWidth"),
+	 New KMeansPlusPlusClusterer With {.K = 3}
 }
 ```
 ### 2. Train model
 Training the model is a process of running the chosen algorithm on the given data. It is implemented in the `Train()` API. To perform training we just call the method and provide our data object  `IrisData` and  prediction object `ClusterPrediction`.
 ```VB
-Dim model = pipeline.Train(Of IrisData, ClusterPrediction)
+Dim prediction1 = model.Predict(TestIrisData.Setosa1)
 ```
 ### 3. Consume model
 After the model is build and trained, we can use the `Predict()` API to predict the cluster for an iris flower and calculate the distance from given flower parameters to each cluster (each centroid of a cluster).
@@ -55,11 +53,11 @@ Where `TestIrisData.Setosa1` stores the information about a setosa iris flower.
 ```VB
 Friend Class TestIrisData
     Friend Shared ReadOnly Setosa1 As New IrisData With {
-        .SepalLength = 5.1F,
-        .SepalWidth = 3.3F,
-        .PetalLength = 1.6F,
-        .PetalWidth = 0.2F
+        .SepalLength = 3.3F,
+        .SepalWidth = 1.6F,
+        .PetalLength = 0.2F,
+        .PetalWidth = 5.1F
     }
-    ' (...)
+    (...)
 End Class
 ```
