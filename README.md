@@ -7,7 +7,9 @@
 ML.NET samples are divided in three categories:
 * **Getting started (C#)** - basic "hello world" samples for each ML task, in C#
 * **Getting started (F#)** - basic "hello world" samples for each ML task, in F#
-* **Examples** -  examples of how you can use various ML.NET components (learners, transforms, ...).
+* **Getting started (VB)** - basic "hello world" samples for each ML task, in VB
+* **Examples (C#)** -  examples of how you can use various ML.NET components (learners, transforms, ...), in C#.
+* **Examples (VB)** -  examples of how you can use various ML.NET components (learners, transforms, ...), in VB.
 * **End-to-end  (C#)** - real world examples of web, desktop, mobile, and other applications infused with ML solutions via [ML.NET APIs](https://docs.microsoft.com/dotnet/api/?view=ml-dotnet).
 
 All samples in this repo are using the latest released  [Microsoft.ML](https://www.nuget.org/packages/Microsoft.ML/) NuGet package. If you would like to see the examples referencing the source code, check out [scenario tests](https://github.com/dotnet/machinelearning/tree/master/test/Microsoft.ML.Tests/Scenarios) in [ML.NET repository](https://github.com/dotnet/machinelearning).
