@@ -26,7 +26,6 @@ Public Module Program
 
             Await modelBuilder.BuildAndTrain()
 
-            'INSTANT VB NOTE: The variable modelEvaluator was renamed since it may cause conflicts with calls to static members of the user-defined type with this name:
             Dim modelEvaluator_Renamed = New ModelEvaluator(ModelHelpers.GetAssetsPath("data", "tags.tsv"), ModelHelpers.GetAssetsPath("images"), ModelHelpers.GetAssetsPath("model", "imageClassifier.zip"))
 
             Await modelEvaluator_Renamed.Evaluate()
