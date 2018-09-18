@@ -45,7 +45,7 @@ Namespace Model
             ShowPredictions(predictions)
 
             If _outputModelLocation IsNot Nothing AndAlso _outputModelLocation.Length > 0 Then
-                ModelHelpers.DeleteAssets(_outputModelLocation)
+                DeleteAssets(_outputModelLocation)
                 Await model.WriteAsync(_outputModelLocation)
             End If
         End Function
@@ -112,7 +112,8 @@ Namespace Model
             Return pipeline
         End Function
 
-        Protected Iterator Function GetPredictions(testLocation As String, imagesFolder As String, model As PredictionModel(Of ImageNetData, ImageNetPrediction)) As IEnumerable(Of ImageNetData)
+        Protected Iterator Function GetPredictions(testLocation As String, imagesFolder As String,
+                                                   model As PredictionModel(Of ImageNetData, ImageNetPrediction)) As IEnumerable(Of ImageNetData)
             Dim labels As String() = Nothing
             model.TryGetScoreLabelNames(labels)
             Dim testData = ImageNetData.ReadFromCsv(testLocation, imagesFolder)
@@ -121,9 +122,9 @@ Namespace Model
                 Dim probs = model.Predict(sample).PredictedLabels
                 Yield New ImageNetData With {
                     .ImagePath = sample.ImagePath,
-                    .Label = ModelHelpers.GetLabel(labels, probs)
+                    .Label = GetLabel(labels, probs)
                 }
-            Next sample
+            Next
 
             Dim sampleNotInTraining As New ImageNetData With {
                 .ImagePath = Path.Combine(imagesFolder, "teddy5.jpg")
@@ -132,7 +133,7 @@ Namespace Model
             Dim sampleNotInTrainingProbs = model.Predict(sampleNotInTraining).PredictedLabels
             Yield New ImageNetData With {
                 .ImagePath = sampleNotInTraining.ImagePath,
-                .Label = ModelHelpers.GetLabel(labels, sampleNotInTrainingProbs)
+                .Label = GetLabel(labels, sampleNotInTrainingProbs)
             }
         End Function
 

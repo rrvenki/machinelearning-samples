@@ -23,38 +23,44 @@ Namespace Model
         End Function
 
         Public Function Columns(Of T As Class)() As IEnumerable(Of String)
-            Return GetType(T).GetProperties().Select(Function(p) p.Name)
+            Return GetType(T).GetProperties.Select(Function(p) p.Name)
         End Function
 
         Public Function Columns(Of T As Class, U)() As IEnumerable(Of String)
             Dim typeofU = GetType(U)
-            Return GetType(T).GetProperties().Where(Function(c) c.PropertyType Is typeofU).Select(Function(p) p.Name)
+            Return From c In GetType(T).GetProperties
+                   Where c.PropertyType Is typeofU
+                   Select c.Name
         End Function
 
         Public Function Columns(Of T As Class, U, V)() As IEnumerable(Of String)
             Dim typeofUV = {GetType(U), GetType(V)}
-            Return GetType(T).GetProperties().Where(Function(c) typeofUV.Contains(c.PropertyType)).Select(Function(p) p.Name)
+            Return From c In GetType(T).GetProperties
+                   Where typeofUV.Contains(c.PropertyType)
+                   Select c.Name
         End Function
 
         Public Function Columns(Of T As Class, U, V, W)() As IEnumerable(Of String)
             Dim typeofUVW = {GetType(U), GetType(V), GetType(W)}
-            Return GetType(T).GetProperties().Where(Function(c) typeofUVW.Contains(c.PropertyType)).Select(Function(p) p.Name)
+            Return From c In GetType(T).GetProperties
+                   Where typeofUVW.Contains(c.PropertyType)
+                   Select c.Name
         End Function
 
         Public Function ColumnsNumerical(Of T As Class)() As String()
-            Return Columns(Of T, Single, Integer)().ToArray()
+            Return Columns(Of T, Single, Integer).ToArray()
         End Function
 
         Public Function ColumnsString(Of T As Class)() As String()
-            Return Columns(Of T, String)().ToArray()
+            Return Columns(Of T, String).ToArray()
         End Function
 
         Public Function ColumnsDateTime(Of T As Class)() As String()
-            Return Columns(Of T, Date)().ToArray()
+            Return Columns(Of T, Date).ToArray()
         End Function
 
         Public Function GetLabel(labels() As String, probs() As Single) As String
-            Dim index = probs.AsSpan().IndexOf(probs.Max())
+            Dim index = probs.AsSpan.IndexOf(probs.Max)
             Return labels(index)
         End Function
     End Module

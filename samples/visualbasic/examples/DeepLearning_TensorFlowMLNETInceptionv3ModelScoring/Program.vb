@@ -22,14 +22,16 @@ Public Module Program
 
     Async Function MainAsync(args() As String) As Task
         Try
-            Dim modelBuilder = New ModelTrainer(ModelHelpers.GetAssetsPath("data", "tags.tsv"), ModelHelpers.GetAssetsPath("images"), ModelHelpers.GetAssetsPath("model", "tensorflow_inception_graph.pb"), ModelHelpers.GetAssetsPath("model", "imageClassifier.zip"))
-
+            Dim modelBuilder As New ModelTrainer(GetAssetsPath("data", "tags.tsv"),
+                                                GetAssetsPath("images"),
+                                                GetAssetsPath("model", "tensorflow_inception_graph.pb"),
+                                                GetAssetsPath("model", "imageClassifier.zip"))
             Await modelBuilder.BuildAndTrain()
 
-            Dim modelEvaluator_Renamed = New ModelEvaluator(ModelHelpers.GetAssetsPath("data", "tags.tsv"), ModelHelpers.GetAssetsPath("images"), ModelHelpers.GetAssetsPath("model", "imageClassifier.zip"))
-
-            Await modelEvaluator_Renamed.Evaluate()
-
+            Dim modelEvaluator As New ModelEvaluator(GetAssetsPath("data", "tags.tsv"),
+                                                     GetAssetsPath("images"),
+                                                     GetAssetsPath("model", "imageClassifier.zip"))
+            Await modelEvaluator.Evaluate()
         Catch ex As Exception
             Console.WriteLine("InnerException: {0}", ex.InnerException.ToString())
             Throw
