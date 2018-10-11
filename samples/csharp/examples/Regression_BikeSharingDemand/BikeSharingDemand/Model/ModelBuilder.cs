@@ -1,21 +1,20 @@
 ﻿using BikeSharingDemand.BikeSharingDemandData;
-using Microsoft.ML;
-using Microsoft.ML.Data;
-using Microsoft.ML.Models;
-using Microsoft.ML.Trainers;
-using Microsoft.ML.Transforms;
+
+using Microsoft.ML.Legacy;
+using Microsoft.ML.Legacy.Data;
+using Microsoft.ML.Legacy.Transforms;
 
 namespace BikeSharingDemand.Model
 {
     public sealed class ModelBuilder
     {
         private readonly string _trainingDataLocation;
-        private readonly ILearningPipelineItem _algorythm;
+        private readonly ILearningPipelineItem _algorithm;
 
-        public ModelBuilder(string trainingDataLocation, ILearningPipelineItem algorythm)
+        public ModelBuilder(string trainingDataLocation, ILearningPipelineItem algorithm)
         {
             _trainingDataLocation = trainingDataLocation;
-            _algorythm = algorythm;
+            _algorithm = algorithm;
         }
 
         /// <summary>
@@ -39,7 +38,7 @@ namespace BikeSharingDemand.Model
                                                 "NormalizedTemperature",
                                                 "Humidity",
                                                 "Windspeed"));
-            pipeline.Add(_algorythm);
+            pipeline.Add(_algorithm);
 
             return pipeline.Train<BikeSharingDemandSample, BikeSharingDemandPrediction>();
         }
