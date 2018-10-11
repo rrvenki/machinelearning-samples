@@ -1,4 +1,6 @@
-﻿Imports TensorFlowMLNETInceptionv3ModelScoring.Model
+﻿Imports Microsoft.ML.Runtime.ImageAnalytics
+Imports Microsoft.ML.Transforms
+Imports TensorFlowMLNETInceptionv3ModelScoring.Model
 
 ' IMPORTANT: This sample, needs ML.NET 0.6 NuGet packages, due to some bug fixes that happened after 0.5 release.
 ' For now, you can get it from MyGet in this Feed: https://dotnet.myget.org/F/dotnet-core/api/v3/index.json
@@ -22,6 +24,8 @@ Public Module Program
 
     Async Function MainAsync(args() As String) As Task
         Try
+            If GetType(TensorFlowTransform) Is Nothing Then Throw New Exception("Tensorflow not loaded correctly")
+            If GetType(ImageLoaderTransform) Is Nothing Then Throw New Exception("ImageAnalytics not loaded correctly")
             Dim modelBuilder As New ModelTrainer(GetAssetsPath("data", "tags.tsv"),
                                                 GetAssetsPath("images"),
                                                 GetAssetsPath("model", "tensorflow_inception_graph.pb"),

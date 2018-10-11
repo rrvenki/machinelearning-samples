@@ -1,8 +1,8 @@
 ﻿Imports System.IO
-Imports Microsoft.ML
-Imports Microsoft.ML.Trainers
-Imports Microsoft.ML.Transforms
-Imports Microsoft.ML.Transforms.TensorFlow
+Imports Microsoft.ML.Legacy
+Imports Microsoft.ML.Legacy.Data
+Imports Microsoft.ML.Legacy.Trainers
+Imports Microsoft.ML.Legacy.Transforms
 Imports TensorFlowMLNETInceptionv3ModelScoring.ImageData
 
 Namespace Model
@@ -52,7 +52,7 @@ Namespace Model
 
         Protected Function Train(pipeline As LearningPipeline) As PredictionModel(Of ImageNetData, ImageNetPrediction)
             ' Initialize TensorFlow engine
-            TensorFlowUtils.Initialize()
+            ' TensorFlowUtils.Initialize()
 
             Dim model = pipeline.Train(Of ImageNetData, ImageNetPrediction)()
             Return model
@@ -65,7 +65,7 @@ Namespace Model
             Dim pipeline As New LearningPipeline
 
             ' TextLoader loads tsv file, containing image file location and label 
-            pipeline.Add(New Microsoft.ML.Data.TextLoader(dataLocation).CreateFrom(Of ImageNetData)(useHeader:=False))
+            pipeline.Add(New TextLoader(dataLocation).CreateFrom(Of ImageNetData)(useHeader:=False))
 
             ' ImageLoader reads input images
             pipeline.Add(New ImageLoader((NameOf(ImageNetData.ImagePath), "ImageReal")) With {.ImageFolder = imagesFolder})
@@ -94,7 +94,7 @@ Namespace Model
             ' TensorFlowScorer is used to get the activation map before the last output of the Neural Network
             ' This activation map is used as a image vector featurizer 
             pipeline.Add(New TensorFlowScorer With {
-                .ModelFile = modelLocation,
+                .Model = modelLocation,
                 .InputColumns = {InceptionSettings.inputTensorName},
                 .OutputColumns = {InceptionSettings.outputTensorName}
             })

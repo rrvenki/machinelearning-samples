@@ -1,19 +1,19 @@
 ﻿Imports BikeSharingDemand.BikeSharingDemandData
-Imports Microsoft.ML
-Imports Microsoft.ML.Data
-Imports Microsoft.ML.Models
-Imports Microsoft.ML.Trainers
-Imports Microsoft.ML.Transforms
+Imports Microsoft.ML.Legacy
+Imports Microsoft.ML.Legacy.Data
+Imports Microsoft.ML.Legacy.Models
+Imports Microsoft.ML.Legacy.Trainers
+Imports Microsoft.ML.Legacy.Transforms
 
 Namespace Model
 
     Public NotInheritable Class ModelBuilder
         Private ReadOnly _trainingDataLocation As String
-        Private ReadOnly _algorythm As ILearningPipelineItem
+        Private ReadOnly _algorithm As ILearningPipelineItem
 
-        Public Sub New(trainingDataLocation As String, algorythm As ILearningPipelineItem)
+        Public Sub New(trainingDataLocation As String, algorithm As ILearningPipelineItem)
             _trainingDataLocation = trainingDataLocation
-            _algorythm = algorythm
+            _algorithm = algorithm
         End Sub
 
         ''' <summary>
@@ -23,10 +23,10 @@ Namespace Model
         ''' <returns>Trained machine learning model.</returns>
         Public Function BuildAndTrain() As PredictionModel(Of BikeSharingDemandSample, BikeSharingDemandPrediction)
             Dim pipeline = New LearningPipeline()
-            pipeline.Add((New TextLoader(_trainingDataLocation)).CreateFrom(Of BikeSharingDemandSample)(useHeader:=True, separator:=","c))
+            pipeline.Add(New TextLoader(_trainingDataLocation).CreateFrom(Of BikeSharingDemandSample)(useHeader:=True, separator:=","c))
             pipeline.Add(New ColumnCopier(("Count", "Label")))
             pipeline.Add(New ColumnConcatenator("Features", "Season", "Year", "Month", "Hour", "Weekday", "Weather", "Temperature", "NormalizedTemperature", "Humidity", "Windspeed"))
-            pipeline.Add(_algorythm)
+            pipeline.Add(_algorithm)
 
             Return pipeline.Train(Of BikeSharingDemandSample, BikeSharingDemandPrediction)()
         End Function

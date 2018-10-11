@@ -19,7 +19,7 @@
     <Import Include="System" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.ML" Version="0.4.0" />
+    <PackageReference Include="Microsoft.ML" Version="$(MicrosoftMLVersion)" />
     <PackageReference Include="PLplot" Version="5.13.7" />
   </ItemGroup>
 

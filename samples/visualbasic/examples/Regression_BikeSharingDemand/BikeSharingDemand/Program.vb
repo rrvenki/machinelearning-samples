@@ -1,9 +1,9 @@
 ﻿Imports BikeSharingDemand.BikeSharingDemandData
 Imports BikeSharingDemand.Helpers
 Imports BikeSharingDemand.Model
-Imports Microsoft.ML
-Imports Microsoft.ML.Models
-Imports Microsoft.ML.Trainers
+Imports Microsoft.ML.Legacy
+Imports Microsoft.ML.Legacy.Models
+Imports Microsoft.ML.Legacy.Trainers
 
 Module Program
     Sub Main(args As String())
@@ -58,7 +58,7 @@ Module Program
     End Sub
 
     Private Sub VisualizeTenPredictionsForTheModel(model As PredictionModel(Of BikeSharingDemandSample, BikeSharingDemandPrediction), testDataLocation As String)
-        Dim testData = (New BikeSharingDemandsCsvReader()).GetDataFromCsv(testDataLocation).ToList()
+        Dim testData = New BikeSharingDemandsCsvReader().GetDataFromCsv(testDataLocation).ToList()
         For i As Integer = 0 To 9
             Dim prediction = model.Predict(testData(i))
             Console.WriteLine($"-------------------------------------------------")

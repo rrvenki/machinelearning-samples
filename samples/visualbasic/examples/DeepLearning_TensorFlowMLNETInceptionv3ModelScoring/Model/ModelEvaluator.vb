@@ -1,7 +1,6 @@
-﻿Imports Microsoft.ML
-Imports Microsoft.ML.Data
-Imports Microsoft.ML.Models
-Imports Microsoft.ML.Transforms.TensorFlow
+﻿Imports Microsoft.ML.Legacy
+Imports Microsoft.ML.Legacy.Data
+Imports Microsoft.ML.Legacy.Models
 Imports TensorFlowMLNETInceptionv3ModelScoring.ImageData
 
 Namespace Model
@@ -18,7 +17,7 @@ Namespace Model
 
         Public Async Function Evaluate() As Task
             ' Initialize TensorFlow engine (Needed before loading the ML.NET related to TensorFlow model. This won't be needed when using the new API in v0.6 with Estimators, etc.)
-            TensorFlowUtils.Initialize()
+            ' TensorFlowUtils.Initialize()
 
             Dim model = Await PredictionModel.ReadAsync(Of ImageNetData, ImageNetPrediction)(_modelLocation)
 

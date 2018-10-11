@@ -1,8 +1,8 @@
 ﻿Imports System.IO
-Imports Microsoft.ML
-Imports Microsoft.ML.Data
-Imports Microsoft.ML.Trainers
-Imports Microsoft.ML.Transforms
+Imports Microsoft.ML.Legacy
+Imports Microsoft.ML.Legacy.Data
+Imports Microsoft.ML.Legacy.Trainers
+Imports Microsoft.ML.Legacy.Transforms
 
 Namespace GitHubLabeler
 	Friend Class Predictor
