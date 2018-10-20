@@ -41,7 +41,7 @@ Friend Module Program
         Evaluate(model)
         ' STEP 3: Make a prediction
         Dim prediction = model.Predict(TestTitanicData.Passenger)
-        Console.WriteLine($"Did this passenger survive?   Actual: Yes   Predicted: {(If(prediction.Survived, "Yes", "No"))}")
+        Console.WriteLine($"Did this passenger survive?   Actual: Yes   Predicted: {If(prediction.Survived, "Yes", "No")} with {prediction.Probability * 100}% probability")
         Console.ReadLine()
     End Function
 
