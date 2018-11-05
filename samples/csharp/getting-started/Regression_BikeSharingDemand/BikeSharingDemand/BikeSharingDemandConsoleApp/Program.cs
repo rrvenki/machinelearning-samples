@@ -33,7 +33,7 @@ namespace BikeSharingDemand
 
             // (Optional) Peek data in training DataView after applying the ProcessPipeline's transformations  
             Common.ConsoleHelper.PeekDataViewInConsole<DemandObservation>(mlContext, trainingDataView, dataProcessPipeline, 10);
-            Common.ConsoleHelper.PeekFeaturesColumnDataInConsole(mlContext, "Features", trainingDataView, dataProcessPipeline, 10);
+            Common.ConsoleHelper.PeekVectorColumnDataInConsole(mlContext, "Features", trainingDataView, dataProcessPipeline, 10);
 
             // Definition of regression trainers/algorithms to use
             //var regressionLearners = new (string name, IEstimator<ITransformer> value)[]
@@ -54,15 +54,12 @@ namespace BikeSharingDemand
             foreach (var learner in regressionLearners)
             {
                 Console.WriteLine("================== Training model ==================");
-                var modelBuilder = new Common.ModelBuilder<DemandObservation,DemandPrediction>(mlContext, dataProcessPipeline, learner.value);
+                var modelBuilder = new Common.ModelBuilder<DemandObservation,DemandPrediction>(mlContext, dataProcessPipeline);
+                modelBuilder.AddTrainer(learner.value);
                 var trainedModel = modelBuilder.Train(trainingDataView);
 
-                Console.WriteLine("========= Predict a single data point ===============");
-                //var prediction = modelBuilder.PredictSingle(DemandObservationSample.SingleDemandSampleData);
-                //Common.ConsoleHelper.PrintPrediction(prediction.PredictedCount.ToString());
-
                 Console.WriteLine("===== Evaluating Model's accuracy with Test data =====");
-                var metrics = modelBuilder.EvaluateRegressionModel(testDataView);
+                var metrics = modelBuilder.EvaluateRegressionModel(testDataView, "Count", "Score");
                 Common.ConsoleHelper.PrintRegressionMetrics(learner.name, metrics);
 
                 //Save the model file that can be used by any application
