@@ -114,13 +114,13 @@ namespace Common
         {
             double average = values.Average();
             double sumOfSquaresOfDifferences = values.Select(val => (val - average) * (val - average)).Sum();
-            double standardDeviation = Math.Sqrt(sumOfSquaresOfDifferences / values.Count());
+            double standardDeviation = Math.Sqrt(sumOfSquaresOfDifferences / (values.Count()-1));
             return standardDeviation;
         }
 
         public static double CalculateConfidenceInterval95(IEnumerable<double> values)
         {
-            double confidenceInterval95 = 1.96 * CalculateStandardDeviation(values) / Math.Sqrt(values.Count());
+            double confidenceInterval95 = 1.96 * CalculateStandardDeviation(values) / Math.Sqrt((values.Count()-1));
             return confidenceInterval95;
         }
 
@@ -130,7 +130,7 @@ namespace Common
             Console.WriteLine($"*       Metrics for {name} clustering model      ");
             Console.WriteLine($"*------------------------------------------------");
             Console.WriteLine($"*       AvgMinScore: {metrics.AvgMinScore}");
-            Console.WriteLine($"*       Dbi is: {metrics.Dbi}");
+            Console.WriteLine($"*       DBI is: {metrics.Dbi}");
             Console.WriteLine($"*************************************************");
         }
 
@@ -141,7 +141,8 @@ namespace Common
             ConsoleWriteHeader(msg);
 
             //https://github.com/dotnet/machinelearning/blob/master/docs/code/MlNetCookBook.md#how-do-i-look-at-the-intermediate-data
-            var transformedData = pipeline.Fit(dataView).Transform(dataView);
+            var transformer = pipeline.Fit(dataView);
+            var transformedData = transformer.Transform(dataView);
 
             // 'transformedData' is a 'promise' of data, lazy-loading. Let's actually read it.
             // Convert to an enumerable of user-defined type.
@@ -174,9 +175,10 @@ namespace Common
             string msg = string.Format("Peek data in DataView: : Show {0} rows with just the '{1}' column", numberOfRows, columnName );
             ConsoleWriteHeader(msg);
 
-            var transformedData = pipeline.Fit(dataView).Transform(dataView);
+            var transformer = pipeline.Fit(dataView);
+            var transformedData = transformer.Transform(dataView);
+
             // Extract the 'Features' column.
-            
             var someColumnData = transformedData.GetColumn<float[]>(mlContext, columnName)
                                                         .Take(numberOfRows).ToList();
 

@@ -4,6 +4,7 @@ using System.IO;
 using Microsoft.ML;
 using Common;
 using Clustering_Iris.DataStructures;
+using Microsoft.ML.Runtime.Data;
 
 namespace Clustering_Iris
 {
@@ -24,7 +25,9 @@ namespace Clustering_Iris
 
             //STEP 1: Common data loading
             DataLoader dataLoader = new DataLoader(mlContext);
-            var trainingDataView = dataLoader.GetDataView(DataPath);
+            var fullData = dataLoader.GetDataView(DataPath);
+
+            (IDataView trainingDataView, IDataView testingDataView) = mlContext.Clustering.TrainTestSplit(fullData, testFraction: 0.2);
 
             //STEP 2: Process data transformations in pipeline
             var dataProcessor = new DataProcessor(mlContext);
@@ -41,8 +44,8 @@ namespace Clustering_Iris
             var trainedModel = modelBuilder.Train(trainingDataView);
 
             // STEP4: Evaluate accuracy of the model
-            var metrics = modelBuilder.EvaluateClusteringModel(trainingDataView);
-            Common.ConsoleHelper.PrintClusteringMetrics("KMeans", metrics);
+            var metrics = modelBuilder.EvaluateClusteringModel(testingDataView);
+            Common.ConsoleHelper.PrintClusteringMetrics(trainer.ToString(), metrics);
 
             // STEP5: Save/persist the model as a .ZIP file
             modelBuilder.SaveModelAsFile(ModelPath);
