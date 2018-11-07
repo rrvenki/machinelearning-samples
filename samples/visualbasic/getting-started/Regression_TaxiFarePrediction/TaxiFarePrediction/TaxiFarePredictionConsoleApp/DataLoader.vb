@@ -7,7 +7,7 @@ Namespace Regression_TaxiFarePrediction
 		Private _mlContext As MLContext
 		Private _loader As TextLoader
 
-		Public Sub New(ByVal mlContext As MLContext)
+		Public Sub New(mlContext As MLContext)
 			_mlContext = mlContext
 
 			_loader = mlContext.Data.TextReader(New TextLoader.Arguments() With {
@@ -25,7 +25,7 @@ Namespace Regression_TaxiFarePrediction
 			})
 		End Sub
 
-		Public Function GetDataView(ByVal filePath As String) As IDataView
+		Public Function GetDataView(filePath As String) As IDataView
 			Return _loader.Read(filePath)
 		End Function
 	End Class

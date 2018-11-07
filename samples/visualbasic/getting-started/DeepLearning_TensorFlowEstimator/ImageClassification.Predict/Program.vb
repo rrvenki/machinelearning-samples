@@ -1,26 +1,25 @@
-﻿Imports System
-Imports System.IO
-Imports System.Threading.Tasks
+﻿Imports System.IO
 Imports ImageClassification.Model
 Imports ImageClassification.Model.ConsoleHelpers
 
 Namespace ImageClassification.Predict
-	Friend Class Program
-		Shared Async Function Main(ByVal args() As String) As Task
-			Dim assetsPath = ModelHelpers.GetAssetsPath("..\..\..\assets")
+    Module Program
 
-			Dim tagsTsv = Path.Combine(assetsPath, "inputs", "data", "tags.tsv")
-			Dim imagesFolder = Path.Combine(assetsPath, "inputs", "data")
-			Dim imageClassifierZip = Path.Combine(assetsPath, "inputs", "imageClassifier.zip")
+        Sub Main(args() As String)
+            Dim assetsPath = GetAssetsPath("..\..\..\assets")
 
-			Try
-				Dim modelEvaluator = New ModelEvaluator(tagsTsv, imagesFolder, imageClassifierZip)
-				modelEvaluator.EvaluateStaticApi()
-			Catch ex As Exception
-				ConsoleWriteException(ex.Message)
-			End Try
+            Dim tagsTsv = Path.Combine(assetsPath, "inputs", "data", "tags.tsv")
+            Dim imagesFolder = Path.Combine(assetsPath, "inputs", "data")
+            Dim imageClassifierZip = Path.Combine(assetsPath, "inputs", "imageClassifier.zip")
 
-			ConsolePressAnyKey()
-		End Function
-	End Class
+            Try
+                Dim modelEvaluator = New ModelEvaluator(tagsTsv, imagesFolder, imageClassifierZip)
+                modelEvaluator.EvaluateStaticApi()
+            Catch ex As Exception
+                ConsoleWriteException(ex.Message)
+            End Try
+
+            ConsolePressAnyKey()
+        End Sub
+    End Module
 End Namespace

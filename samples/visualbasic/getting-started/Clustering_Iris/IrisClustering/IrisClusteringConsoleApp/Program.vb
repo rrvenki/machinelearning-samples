@@ -1,14 +1,12 @@
-﻿Imports System
-Imports System.IO
+﻿Imports System.IO
 
 Imports Microsoft.ML
 Imports Common
 Imports Clustering_Iris.DataStructures
-Imports Microsoft.ML.Runtime.Data
 
 Namespace Clustering_Iris
     Friend Module Program
-        Private ReadOnly Property AppPath() As String
+        Private ReadOnly Property AppPath As String
             Get
                 Return Path.GetDirectoryName(Environment.GetCommandLineArgs()(0))
             End Get
@@ -20,7 +18,7 @@ Namespace Clustering_Iris
         Private BaseModelsPath As String = "../../../../MLModels"
         Private ModelPath As String = $"{BaseModelsPath}/IrisModel.zip"
 
-        Public Sub Main(ByVal args() As String)
+        Public Sub Main(args() As String)
             'Create the MLContext to share across components for deterministic results
             Dim mlContext As New MLContext(seed:=1) 'Seed set to any number so you have a deterministic environment
 
@@ -28,7 +26,6 @@ Namespace Clustering_Iris
             Dim dataLoader As New DataLoader(mlContext)
             Dim fullData = dataLoader.GetDataView(DataPath)
 
-            'INSTANT VB TODO TASK: VB has no equivalent to C# deconstruction declarations:
             With mlContext.Clustering.TrainTestSplit(fullData, testFraction:=0.2)
                 'STEP 2: Process data transformations in pipeline
                 Dim dataProcessor = New DataProcessor(mlContext)

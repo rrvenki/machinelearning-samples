@@ -1,6 +1,4 @@
-﻿Imports System.Collections.Generic
-
-Namespace BinaryClasification_TitanicSurvivalPrediction
+﻿Namespace TitanicSurvivalConsoleApp.DataStructures
 	Friend Class TestTitanicData
 		Friend Shared ReadOnly Passenger As New TitanicData() With {
 			.Pclass = 2,

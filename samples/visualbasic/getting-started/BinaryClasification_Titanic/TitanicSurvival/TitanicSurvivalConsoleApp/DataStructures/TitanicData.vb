@@ -1,14 +1,14 @@
 ﻿Imports Microsoft.ML.Runtime.Api
 
-Namespace BinaryClasification_TitanicSurvivalPrediction
+Namespace TitanicSurvivalConsoleApp.DataStructures
 	Public Class TitanicData
 		<Column("0")>
 		Public PassengerId As Single
 
-		<Column(ordinal:= "1", name:= "Label")>
-		Public Survived As Single
+        <Column("1")>
+        Public Label As Single 'If "Survived" or not
 
-		<Column("2")>
+        <Column("2")>
 		Public Pclass As Single
 
 		<Column("3")>

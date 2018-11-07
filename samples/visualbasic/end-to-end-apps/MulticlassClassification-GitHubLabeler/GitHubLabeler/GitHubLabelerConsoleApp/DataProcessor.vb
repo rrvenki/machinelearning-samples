@@ -12,12 +12,12 @@ Namespace GitHubLabeler
 			Get
 				Return privateDataProcessPipeline
 			End Get
-			Private Set(ByVal value As IEstimator(Of ITransformer))
+			Private Set(value As IEstimator(Of ITransformer))
 				privateDataProcessPipeline = value
 			End Set
 		End Property
 
-		Public Sub New(ByVal mlContext As MLContext)
+		Public Sub New(mlContext As MLContext)
 			' Configure data transformations in the Process pipeline
 
 			DataProcessPipeline = (New ValueToKeyMappingEstimator(mlContext, "Area", "Label")).Append(mlContext.Transforms.Text.FeaturizeText("Title", "TitleFeaturized")).Append(mlContext.Transforms.Text.FeaturizeText("Description", "DescriptionFeaturized")).Append(mlContext.Transforms.Concatenate("Features", "TitleFeaturized", "DescriptionFeaturized"))
