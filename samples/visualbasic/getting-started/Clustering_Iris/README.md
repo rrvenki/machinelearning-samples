@@ -1,4 +1,9 @@
-# Clustering Iris Data
+﻿# Clustering Iris Data
+
+| ML.NET version | API type          | Status                        | App Type    | Data type | Scenario            | ML Task                   | Algorithms                  |
+|----------------|-------------------|-------------------------------|-------------|-----------|---------------------|---------------------------|-----------------------------|
+| v0.7           | Dynamic API | README.md needs update | Console app | .txt file | Clustering Iris flowers | Clustering | K-means++ |
+
 In this introductory sample, you'll see how to use [ML.NET](https://www.microsoft.com/net/learn/apps/machine-learning-and-ai/ml-dotnet) to divide iris flowers into different groups that correspond to different types of iris. In the world of machine learning, this task is known as **clustering**.
 
 ## Problem
@@ -26,38 +31,75 @@ To solve this problem, first we will build and train an ML model. Then we will u
 ### 1. Build model
 
 Building a model includes: uploading data (`iris-full.txt` with `TextLoader`), transforming the data so it can be used effectively by an ML algorithm (with `ColumnConcatenator`), and choosing a learning algorithm (`KMeansPlusPlusClusterer`). All of those steps are stored in a `LearningPipeline`:
-```VB
-' LearningPipeline holds all steps of the learning process: data, transforms, learners.
-' The TextLoader loads a dataset. The schema of the dataset is specified by passing a class containing
-' all the column names and their types.
-' ColumnConcatenator concatenates all columns into Features column
-' KMeansPlusPlusClusterer is an algorithm that will be used to build clusters. We set the number of clusters to 3.
-Dim pipeline = New LearningPipeline From {
-	 (New TextLoader(DataPath)).CreateFrom(Of IrisData)(useHeader:= True),
-	 New ColumnConcatenator("Features", "SepalLength", "SepalWidth", "PetalLength", "PetalWidth"),
-	 New KMeansPlusPlusClusterer With {.K = 3}
-}
+```CSharp
+// LearningPipeline holds all steps of the learning process: data, transforms, learners.
+using (var env = new LocalEnvironment())
+            {
+                // Create DataReader with data schema mapped to file's columns
+                var reader = new TextLoader(env,
+                                new TextLoader.Arguments()
+                                {
+                                    Separator = "\t",
+                                    HasHeader = true,
+                                    Column = new[]
+                                    {
+                                     new TextLoader.Column("Label", DataKind.R4, 0),
+                                     new TextLoader.Column("SepalLength", DataKind.R4, 1),
+                                     new TextLoader.Column("SepalWidth", DataKind.R4, 2),                                     new TextLoader.Column("SepalWidth", DataKind.R4, 2),
+                                     new TextLoader.Column("PetalLength", DataKind.R4, 3),
+                                     new TextLoader.Column("PetalWidth", DataKind.R4, 4),
+
+                                    }
+                                });
+                //Load training data
+                IDataView trainingDataView = reader.Read(new MultiFileSource(DataPath));
+
+            }
 ```
 ### 2. Train model
 Training the model is a process of running the chosen algorithm on the given data. It is implemented in the `Train()` API. To perform training we just call the method and provide our data object  `IrisData` and  prediction object `ClusterPrediction`.
-```VB
-Dim prediction1 = model.Predict(TestIrisData.Setosa1)
+```CSharp
+                // Transform your data and add a learner
+                // Add a learning algorithm to the pipeline. e.g.(What are characteristics of iris is this?)
+                // Convert the Label back into original text (after converting to number in step 3)
+                var pipeline = new ConcatEstimator(env, "Features", "SepalLength", "SepalWidth", "PetalLength", "PetalWidth")
+                       .Append(new KMeansPlusPlusTrainer(env, "Features",clustersCount:3));
+
+                // Create and train the model            
+                Console.WriteLine("=============== Create and Train the Model ===============");
+
+                var model = pipeline.Fit(trainingDataView);
+
 ```
 ### 3. Consume model
 After the model is build and trained, we can use the `Predict()` API to predict the cluster for an iris flower and calculate the distance from given flower parameters to each cluster (each centroid of a cluster).
 
-```VB
-Dim prediction1 = model.Predict(TestIrisData.Setosa1)
+```CSharp
+                // Test with one sample text 
+                var sampleIrisData = new IrisData()
+                {
+                    SepalLength = 3.3f,
+                    SepalWidth = 1.6f,
+                    PetalLength = 0.2f,
+                    PetalWidth = 5.1f,
+                };
+
+                var prediction = model.MakePredictionFunction<IrisData, IrisPrediction>(env).Predict(
+                    sampleIrisData);
+
+                Console.WriteLine($"Clusters assigned for setosa flowers:"+prediction.SelectedClusterId);
 ```
 Where `TestIrisData.Setosa1` stores the information about a setosa iris flower.
-```VB
-Friend Class TestIrisData
-    Friend Shared ReadOnly Setosa1 As New IrisData With {
-        .SepalLength = 3.3F,
-        .SepalWidth = 1.6F,
-        .PetalLength = 0.2F,
-        .PetalWidth = 5.1F
-    }
+```CSharp
+internal class TestIrisData
+{
+    internal static readonly IrisData Setosa1 = new IrisData()
+    {
+        SepalLength = 3.3f,
+        SepalWidth = 1.6f,
+        PetalLength = 0.2f,
+        PetalWidth = 5.1f,
+    };
     (...)
-End Class
+}
 ```

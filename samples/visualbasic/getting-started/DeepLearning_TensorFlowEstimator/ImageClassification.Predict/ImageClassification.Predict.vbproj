@@ -1,0 +1,39 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <LangVersion>7.2</LangVersion>
+    <OptionExplicit>On</OptionExplicit>
+    <OptionCompare>Binary</OptionCompare>
+    <OptionStrict>Off</OptionStrict>
+    <OptionInfer>On</OptionInfer>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Import Include="Microsoft.VisualBasic" />
+    <Import Include="System.Collections.Generic" />
+    <Import Include="System.Collections" />
+    <Import Include="System.Diagnostics" />
+    <Import Include="System.Linq" />
+    <Import Include="System" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\ImageClassification.Train\ImageData\ImageNetData.vb" Link="ImageData\ImageNetData.vb" />
+    <Compile Include="..\ImageClassification.Train\ImageData\ImageNetPrediction.vb" Link="ImageData\ImageNetPrediction.vb" />
+    <Compile Include="..\ImageClassification.Train\Model\ConsoleHelpers.vb" Link="Model\ConsoleHelpers.vb" />
+    <Compile Include="..\ImageClassification.Train\Model\ModelHelpers.vb" Link="Model\ModelHelpers.vb" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.ML" Version="0.7.0-preview-27031-8" />
+    <PackageReference Include="Microsoft.ML.ImageAnalytics" Version="0.7.0-preview-27031-8" />
+    <PackageReference Include="Microsoft.ML.TensorFlow" Version="0.7.0-preview-27031-8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="assets\outputs\" />
+    <Folder Include="ImageData\" />
+  </ItemGroup>
+
+</Project>
