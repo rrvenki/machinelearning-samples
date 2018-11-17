@@ -1,4 +1,5 @@
 ﻿Imports System.IO
+Imports Microsoft.ML.Runtime.Data
 Imports Microsoft.ML
 Imports MulticlassClassification_Iris.DataStructures
 
@@ -33,19 +34,13 @@ Namespace MulticlassClassification_Iris
         End Sub
 
         Private Sub BuildTrainEvaluateAndSaveModel(mlContext As MLContext)
-
             ' STEP 1: Common data loading configuration
-            Dim dataLoader As New DataLoader(mlContext)
-            Dim trainingDataView = dataLoader.GetDataView(TrainDataPath)
-            Dim testDataView = dataLoader.GetDataView(TestDataPath)
+            Dim textLoader = CreateTextLoader(mlContext)
+            Dim trainingDataView = textLoader.Read(TrainDataPath)
+            Dim testDataView = textLoader.Read(TestDataPath)
 
             ' STEP 2: Common data process configuration with pipeline data transformations
-            Dim dataProcessor = New DataProcessor(mlContext)
-            Dim dataProcessPipeline = dataProcessor.DataProcessPipeline
-
-            ' (OPTIONAL) Peek data (such as 5 records) in training DataView after applying the ProcessPipeline's transformations into "Features" 
-            Common.PeekDataViewInConsole(Of IrisData)(mlContext, trainingDataView, dataProcessPipeline, 5)
-            Common.PeekVectorColumnDataInConsole(mlContext, "Features", trainingDataView, dataProcessPipeline, 5)
+            Dim dataProcessPipeline = mlContext.Transforms.Concatenate("Features", "SepalLength", "SepalWidth", "PetalLength", "PetalWidth")
 
             ' STEP 3: Set the training algorithm, then create and config the modelBuilder                            
             Dim modelBuilder = New Common.ModelBuilder(Of IrisData, IrisPrediction)(mlContext, dataProcessPipeline)
