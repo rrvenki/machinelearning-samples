@@ -9,7 +9,3 @@
         'public float[] DescriptionFeaturized; // -> Description Featurized 
     End Class
 End Namespace
-
-
-'public Scalar<bool> label { get; set; }
-'public Scalar<float> score { get; set; }

@@ -59,6 +59,7 @@ Namespace Common
         End Sub
 
         Public Sub PrintMulticlassClassificationFoldsAverageMetrics(algorithmName As String, crossValResults() As (metrics As MultiClassClassifierEvaluator.Result, model As ITransformer, scoredTestData As IDataView))
+            'INSTANT VB TODO TASK: The following line could not be converted:
             Dim metricsInMultipleFolds = crossValResults.Select(Function(r) r.metrics)
 
             Dim microAccuracyValues = metricsInMultipleFolds.Select(Function(m) m.AccuracyMicro)

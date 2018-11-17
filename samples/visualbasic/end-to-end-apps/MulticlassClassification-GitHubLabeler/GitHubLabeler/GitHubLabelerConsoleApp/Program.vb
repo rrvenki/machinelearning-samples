@@ -6,7 +6,6 @@
 Imports Microsoft.Extensions.Configuration
 
 Imports Microsoft.ML
-Imports Microsoft.ML.Transforms.Conversions
 Imports Microsoft.ML.Runtime.Learners
 Imports Microsoft.ML.Core.Data
 
@@ -35,7 +34,7 @@ Namespace GitHubLabeler
 
         Public Property Configuration() As IConfiguration
 
-        Sub Main(args() As String)
+        Sub Main(args As String())
             MainAsync(args).GetAwaiter.GetResult()
         End Sub
 
@@ -61,12 +60,11 @@ Namespace GitHubLabeler
             Dim mlContext = New MLContext(seed:=0)
 
             ' STEP 1: Common data loading configuration
-            Dim dataLoader As New DataLoader(mlContext)
-            Dim trainingDataView = dataLoader.GetDataView(DataSetLocation)
+            Dim textLoader = CreateTextLoader(mlContext)
+            Dim trainingDataView = textLoader.Read(DataSetLocation)
 
             ' STEP 2: Common data process configuration with pipeline data transformations
-            Dim dataProcessor = New DataProcessor(mlContext)
-            Dim dataProcessPipeline = dataProcessor.DataProcessPipeline
+            Dim dataProcessPipeline = GitHubLabelerDataProcessPipelineFactory.CreateDataProcessPipeline(mlContext)
 
             ' (OPTIONAL) Peek data (such as 2 records) in training DataView after applying the ProcessPipeline's transformations into "Features" 
             PeekDataViewInConsole(Of GitHubIssue)(mlContext, trainingDataView, dataProcessPipeline, 2)
@@ -92,7 +90,7 @@ Namespace GitHubLabeler
             'Set the trainer/algorithm
             Dim modelBuilder = New Common.ModelBuilder(Of GitHubIssue, GitHubIssuePrediction)(mlContext, dataProcessPipeline)
             modelBuilder.AddTrainer(trainer)
-            modelBuilder.AddEstimator(New KeyToValueEstimator(mlContext, "PredictedLabel"))
+            modelBuilder.AddEstimator(mlContext.Transforms.Conversion.MapKeyToValue("PredictedLabel"))
 
             ' STEP 4: Cross-Validate with single dataset (since we don't have two datasets, one for training and for evaluate)
             ' in order to evaluate and get the model's accuracy metrics
