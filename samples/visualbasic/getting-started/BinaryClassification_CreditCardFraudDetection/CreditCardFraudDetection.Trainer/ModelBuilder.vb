@@ -48,11 +48,6 @@ Namespace CreditCardFraudDetection.Trainer
 
         Public Sub TrainFastTreeAndSaveModels(Optional cvNumFolds As Integer = 2, Optional numLeaves As Integer = 20, Optional numTrees As Integer = 100, Optional minDocumentsInLeafs As Integer = 10, Optional learningRate As Double = 0.2, Optional advancedSettings As Action(Of Arguments) = Nothing)
 
-            'DELETE, code line not used
-            'var logMeanVarNormalizer =   new Normalizer(_mlContext, Normalizer.NormalizerMode.MeanVariance ,("Features", "FeaturesNormalizedByMeanVar"));
-
-            '.Append(mlContext.Transforms.Normalize(inputName: "PassengerCount", mode:NormalizerMode.MeanVariance))
-
             'Create a flexible pipeline (composed by a chain of estimators) for building/traing the model.
 
             Dim pipeline = _mlContext.Transforms.Concatenate("Features", {"Amount", "V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8", "V9", "V10", "V11", "V12", "V13", "V14", "V15", "V16", "V17", "V18", "V19", "V20", "V21", "V22", "V23", "V24", "V25", "V26", "V27", "V28"}).Append(_mlContext.Transforms.Normalize(inputName:="Features", outputName:="FeaturesNormalizedByMeanVar", mode:=NormalizerMode.MeanVariance)).Append(_mlContext.BinaryClassification.Trainers.FastTree(label:="Label", features:="Features", numLeaves:=20, numTrees:=100, minDatapointsInLeafs:=10, learningRate:=0.2))
