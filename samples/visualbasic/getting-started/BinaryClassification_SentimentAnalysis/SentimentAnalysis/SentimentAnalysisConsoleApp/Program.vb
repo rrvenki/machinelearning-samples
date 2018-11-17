@@ -1,8 +1,10 @@
 ﻿Imports System.IO
+Imports Microsoft.ML.Runtime.Data
 Imports Microsoft.ML.Core.Data
 Imports Microsoft.ML
 
 Imports SentimentAnalysisConsoleApp.DataStructures
+Imports Microsoft.ML.Transforms.Text
 
 Namespace SentimentAnalysisConsoleApp
 
@@ -27,29 +29,24 @@ Namespace SentimentAnalysisConsoleApp
 
             ' Create, Train, Evaluate and Save a model
             BuildTrainEvaluateAndSaveModel(mlContext)
-            Common.ConsoleWriteHeader("=============== End of training processh ===============")
+            Common.ConsoleHelper.ConsoleWriteHeader("=============== End of training processh ===============")
 
             ' Make a single test prediction loding the model from .ZIP file
             TestSinglePrediction(mlContext)
 
-            Common.ConsoleWriteHeader("=============== End of process, hit any key to finish ===============")
+            Common.ConsoleHelper.ConsoleWriteHeader("=============== End of process, hit any key to finish ===============")
             Console.ReadKey()
 
         End Sub
 
         Private Function BuildTrainEvaluateAndSaveModel(mlContext As MLContext) As ITransformer
             ' STEP 1: Common data loading configuration
-            Dim dataLoader As New DataLoader(mlContext)
-            Dim trainingDataView = dataLoader.GetDataView(TrainDataPath)
-            Dim testDataView = dataLoader.GetDataView(TestDataPath)
+            Dim textLoader = SentimentAnalysysTextLoaderFactory.CreateTextLoader(mlContext)
+            Dim trainingDataView = textLoader.Read(TrainDataPath)
+            Dim testDataView = textLoader.Read(TestDataPath)
 
-            ' STEP 2: Common data process configuration with pipeline data transformations
-            Dim dataProcessor = New DataProcessor(mlContext)
-            Dim dataProcessPipeline = dataProcessor.DataProcessPipeline
-
-            ' (OPTIONAL) Peek data (such as 2 records) in training DataView after applying the ProcessPipeline's transformations into "Features" 
-            Common.PeekDataViewInConsole(Of SentimentIssue)(mlContext, trainingDataView, dataProcessPipeline, 2)
-            'Common.ConsoleHelper.PeekVectorColumnDataInConsole(mlContext, "Features", trainingDataView, dataProcessPipeline, 2);
+            ' STEP 2: Common data process configuration with pipeline data transformations          
+            Dim dataProcessPipeline = mlContext.Transforms.Text.FeaturizeText("Text", "Features")
 
             ' STEP 3: Set the training algorithm, then create and config the modelBuilder                            
             Dim modelBuilder = New Common.ModelBuilder(Of SentimentIssue, SentimentPrediction)(mlContext, dataProcessPipeline)
@@ -63,7 +60,7 @@ Namespace SentimentAnalysisConsoleApp
             ' STEP 5: Evaluate the model and show accuracy stats
             Console.WriteLine("===== Evaluating Model's accuracy with Test data =====")
             Dim metrics = modelBuilder.EvaluateBinaryClassificationModel(testDataView, "Label", "Score")
-            Common.PrintBinaryClassificationMetrics(trainer.ToString(), metrics)
+            Common.ConsoleHelper.PrintBinaryClassificationMetrics(trainer.ToString(), metrics)
 
             ' STEP 6: Save/persist the trained model to a .ZIP file
             Console.WriteLine("=============== Saving the model to a file ===============")
