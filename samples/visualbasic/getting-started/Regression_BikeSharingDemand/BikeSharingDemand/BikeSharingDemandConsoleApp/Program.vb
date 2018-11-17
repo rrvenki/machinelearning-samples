@@ -11,26 +11,24 @@ Namespace BikeSharingDemand
         Private TrainingDataLocation As String = $"{DatasetsLocation}/hour_train.csv"
         Private TestDataLocation As String = $"{DatasetsLocation}/hour_test.csv"
 
-        Sub Main(args() As String)
+        Sub Main(ByVal args() As String)
             ' Create MLContext to be shared across the model creation workflow objects 
             ' Set a random seed for repeatable/deterministic results across multiple trainings.
             Dim mlContext = New MLContext(seed:=0)
 
-            ' 1. Common data loading
-            Dim dataLoader As New DataLoader(mlContext)
-            Dim trainingDataView = dataLoader.GetDataView(TrainingDataLocation)
-            Dim testDataView = dataLoader.GetDataView(TestDataLocation)
+            ' 1. Common data loading configuration
+            Dim textLoader = CreateTextLoader(mlContext)
+            Dim trainingDataView = textLoader.Read(TrainingDataLocation)
+            Dim testDataView = textLoader.Read(TestDataLocation)
 
             ' 2. Common data pre-process with pipeline data transformations
-            Dim dataProcessor = New DataProcessor(mlContext)
-            Dim dataProcessPipeline = dataProcessor.DataProcessPipeline
+            Dim dataProcessPipeline = BikeSharingDataProcessPipelineFactory.CreateDataProcessPipeline(mlContext)
 
             ' (Optional) Peek data in training DataView after applying the ProcessPipeline's transformations  
             Common.PeekDataViewInConsole(Of DemandObservation)(mlContext, trainingDataView, dataProcessPipeline, 10)
             Common.PeekVectorColumnDataInConsole(mlContext, "Features", trainingDataView, dataProcessPipeline, 10)
 
             ' Definition of regression trainers/algorithms to use
-            'var regressionLearners = new (string name, IEstimator<ITransformer> value)[]
             Dim regressionLearners As (name As String, value As IEstimator(Of ITransformer))() = {("FastTree", mlContext.Regression.Trainers.FastTree()), ("Poisson", mlContext.Regression.Trainers.PoissonRegression()), ("SDCA", mlContext.Regression.Trainers.StochasticDualCoordinateAscent()), ("FastTreeTweedie", mlContext.Regression.Trainers.FastTreeTweedie())}
 
             ' 3. Phase for Training, Evaluation and model file persistence
@@ -64,7 +62,6 @@ Namespace BikeSharingDemand
             Next learner
 
             Common.ConsolePressAnyKey()
-
         End Sub
     End Module
 End Namespace
