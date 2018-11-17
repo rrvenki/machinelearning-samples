@@ -3,7 +3,7 @@ Imports Microsoft.ML.Runtime.Data
 
 Namespace BikeSharingDemand
     Public Module BikeSharingTextLoaderFactory
-        Public Function CreateTextLoader(ByVal mlContext As MLContext) As TextLoader
+        Public Function CreateTextLoader(mlContext As MLContext) As TextLoader
             Dim textLoader As TextLoader = mlContext.Data.TextReader(New TextLoader.Arguments() With {
                 .Separator = ",",
                 .HasHeader = True,

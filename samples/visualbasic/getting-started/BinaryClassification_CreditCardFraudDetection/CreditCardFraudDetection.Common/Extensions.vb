@@ -2,11 +2,12 @@
 Imports Microsoft.ML.Core.Data
 Imports Microsoft.ML.Runtime.Data
 Imports System.IO
+Imports System.Runtime.CompilerServices
 
 Namespace CreditCardFraudDetection.Common
     Public Module ConsoleExtensions
 
-        <System.Runtime.CompilerServices.Extension>
+        <Extension>
         Public Sub ToConsole(result As MultiClassClassifierEvaluator.Result)
             Console.WriteLine($"Acuracy macro: {result.AccuracyMacro}")
             Console.WriteLine($"Acuracy micro: {result.AccuracyMicro}")
@@ -22,7 +23,7 @@ Namespace CreditCardFraudDetection.Common
             Console.WriteLine($"Top K accuracy: {result.TopKAccuracy}")
         End Sub
 
-        <System.Runtime.CompilerServices.Extension> _
+        <Extension>
         Public Sub ToConsole(result As BinaryClassifierEvaluator.CalibratedResult)
             Console.WriteLine($"Area under ROC curve: {result.Auc}")
             Console.WriteLine($"Area under the precision/recall curve: {result.Auprc}")
@@ -36,7 +37,7 @@ Namespace CreditCardFraudDetection.Common
 
         End Sub
 
-        <System.Runtime.CompilerServices.Extension> _
+        <Extension>
         Public Sub ToConsole(result As RegressionEvaluator.Result)
             Console.WriteLine($"L1: {result.L1}")
             Console.WriteLine($"L2: {result.L2}")
@@ -45,16 +46,7 @@ Namespace CreditCardFraudDetection.Common
             Console.WriteLine($"R scuared: {result.RSquared}")
         End Sub
 
-        'public static IEnumerable<string> GetColumnNames(this ISchema schema)
-        '{
-        '    for (int i = 0; i < schema.ColumnCount; i++)
-        '    {
-        '        if (!schema.IsHidden(i))
-        '            yield return schema.GetColumnName(i);
-        '    }
-        '}
-
-        <System.Runtime.CompilerServices.Extension> _
+        <Extension>
         Public Sub SaveModel(model As ITransformer, env As MLContext, modelSavePath As String)
             Using stream = File.Create(modelSavePath)
                 ' Saving and loading happens to 'dynamic' models, so the static typing is lost in the process.
@@ -62,10 +54,10 @@ Namespace CreditCardFraudDetection.Common
             End Using
         End Sub
 
-        <System.Runtime.CompilerServices.Extension> _
+        <Extension>
         Public Function ReadModel(env As MLContext, modelLocation As String) As ITransformer
             Dim model As ITransformer
-            Using file = IO.File.OpenRead(modelLocation)
+            Using file = System.IO.File.OpenRead(modelLocation)
                 model = TransformerChain.LoadFrom(env, file)
             End Using
             Return model

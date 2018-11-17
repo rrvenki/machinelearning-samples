@@ -8,7 +8,7 @@ Imports System.Text
 
 Namespace Clustering_Iris
 	Public Module IrisTextLoaderFactory
-		Public Function CreateTextLoader(ByVal mlContext As MLContext) As TextLoader
+		Public Function CreateTextLoader(mlContext As MLContext) As TextLoader
 			Dim textLoader As TextLoader = mlContext.Data.TextReader(New TextLoader.Arguments() With {
 				.Separator = vbTab,
 				.HasHeader = True,

@@ -12,7 +12,7 @@ Imports CustomerSegmentation.DataStructures
 
 Namespace CustomerSegmentation
 	Public Class Program
-		Shared Sub Main(ByVal args() As String)
+		Shared Sub Main(args() As String)
 			Dim assetsPath = ModelHelpers.GetAssetsPath("..\..\..\assets")
 
 			Dim transactionsCsv = Path.Combine(assetsPath, "inputs", "transactions.csv")

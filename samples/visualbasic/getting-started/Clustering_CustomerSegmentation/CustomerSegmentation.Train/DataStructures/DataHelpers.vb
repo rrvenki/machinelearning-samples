@@ -5,13 +5,13 @@ Imports System.Text
 
 Namespace CustomerSegmentation.DataStructures
 	Public Class DataHelpers
-		Public Shared Function PreProcessAndSave(ByVal offersDataLocation As String, ByVal transactionsDataLocation As String, ByVal pivotDataLocation As String) As IEnumerable(Of PivotData)
+		Public Shared Function PreProcessAndSave(offersDataLocation As String, transactionsDataLocation As String, pivotDataLocation As String) As IEnumerable(Of PivotData)
 			Dim preProcessData = PreProcess(offersDataLocation, transactionsDataLocation)
 			PivotData.SaveToCsv(preProcessData, pivotDataLocation)
 			Return preProcessData
 		End Function
 
-		Public Shared Function PreProcess(ByVal offersDataLocation As String, ByVal transactionsDataLocation As String) As IEnumerable(Of PivotData)
+		Public Shared Function PreProcess(offersDataLocation As String, transactionsDataLocation As String) As IEnumerable(Of PivotData)
 			Common.ConsoleHelper.ConsoleWriteHeader("Preprocess input files")
 			Console.WriteLine($"Offers file: {offersDataLocation}")
 			Console.WriteLine($"Transactions file: {transactionsDataLocation}")

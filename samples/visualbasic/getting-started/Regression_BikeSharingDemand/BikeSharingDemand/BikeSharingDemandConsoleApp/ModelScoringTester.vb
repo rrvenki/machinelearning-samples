@@ -7,7 +7,7 @@ Imports Common
 
 Namespace BikeSharingDemand
     Public Module ModelScoringTester
-        Public Sub VisualizeSomePredictions(ByVal mlContext As MLContext, ByVal modelName As String, ByVal testDataLocation As String, ByVal modelScorer As ModelScorer(Of DemandObservation, DemandPrediction), ByVal numberOfPredictions As Integer)
+        Public Sub VisualizeSomePredictions(mlContext As MLContext, modelName As String, testDataLocation As String, modelScorer As ModelScorer(Of DemandObservation, DemandPrediction), numberOfPredictions As Integer)
             'Make a few prediction tests 
             ' Make the provided number of predictions and compare with observed data from the test dataset
             Dim testData = ReadSampleDataFromCsvFile(testDataLocation, numberOfPredictions)
@@ -21,7 +21,7 @@ Namespace BikeSharingDemand
         End Sub
 
         'This method is using regular .NET System.IO.File and LinQ to read just some sample data to test/predict with 
-        Public Function ReadSampleDataFromCsvFile(ByVal dataLocation As String, ByVal numberOfRecordsToRead As Integer) As List(Of DemandObservation)
+        Public Function ReadSampleDataFromCsvFile(dataLocation As String, numberOfRecordsToRead As Integer) As List(Of DemandObservation)
             Return File.ReadLines(dataLocation).Skip(1).Where(Function(x) Not String.IsNullOrWhiteSpace(x)).Select(Function(x) x.Split(","c)).Select(Function(x) New DemandObservation() With {
                 .Season = Single.Parse(x(2)),
                 .Year = Single.Parse(x(3)),

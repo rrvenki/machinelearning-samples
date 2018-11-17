@@ -7,7 +7,7 @@ Imports Microsoft.ML
 
 Namespace CustomerSegmentation
 	Public Class Program
-		Shared Sub Main(ByVal args() As String)
+		Shared Sub Main(args() As String)
 			Dim assetsPath = "..\..\..\assets"
 			Dim pivotCsv = Path.Combine(assetsPath, "inputs", "pivot.csv")
 			Dim modelZipFilePath = Path.Combine(assetsPath, "inputs", "retailClustering.zip")

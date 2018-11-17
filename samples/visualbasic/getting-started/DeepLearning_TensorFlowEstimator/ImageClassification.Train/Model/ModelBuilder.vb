@@ -17,7 +17,7 @@ Namespace ImageClassification.Model
         Private ReadOnly outputModelLocation As String
         Private ReadOnly mlContext As MLContext
 
-        Public Sub New(ByVal dataLocation As String, ByVal imagesFolder As String, ByVal inputModelLocation As String, ByVal outputModelLocation As String)
+        Public Sub New(dataLocation As String, imagesFolder As String, inputModelLocation As String, outputModelLocation As String)
             Me.dataLocation = dataLocation
             Me.imagesFolder = imagesFolder
             Me.inputModelLocation = inputModelLocation

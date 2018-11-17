@@ -11,7 +11,7 @@ Namespace BikeSharingDemand
         Private TrainingDataLocation As String = $"{DatasetsLocation}/hour_train.csv"
         Private TestDataLocation As String = $"{DatasetsLocation}/hour_test.csv"
 
-        Sub Main(ByVal args() As String)
+        Sub Main(args() As String)
             ' Create MLContext to be shared across the model creation workflow objects 
             ' Set a random seed for repeatable/deterministic results across multiple trainings.
             Dim mlContext = New MLContext(seed:=0)

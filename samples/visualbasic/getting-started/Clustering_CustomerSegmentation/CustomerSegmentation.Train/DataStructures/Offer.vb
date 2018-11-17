@@ -16,7 +16,7 @@ Namespace CustomerSegmentation.DataStructures
 		Public Property Origin() As String
 		Public Property LastPeak() As String
 
-		Public Shared Function ReadFromCsv(ByVal file As String) As IEnumerable(Of Offer)
+		Public Shared Function ReadFromCsv(file As String) As IEnumerable(Of Offer)
 			Return System.IO.File.ReadAllLines(file).Skip(1).Select(Function(x) x.Split(","c)).Select(Function(x) New Offer() With {
 				.OfferId = x(0),
 				.Campaign = x(1),
