@@ -1,12 +1,14 @@
-﻿Imports System.IO
+﻿Imports System
+Imports System.IO
 
 Imports Microsoft.ML
 Imports Common
 Imports Clustering_Iris.DataStructures
+Imports Microsoft.ML.Runtime.Data
 
 Namespace Clustering_Iris
     Friend Module Program
-        Private ReadOnly Property AppPath As String
+        Private ReadOnly Property AppPath() As String
             Get
                 Return Path.GetDirectoryName(Environment.GetCommandLineArgs()(0))
             End Get
@@ -18,31 +20,32 @@ Namespace Clustering_Iris
         Private BaseModelsPath As String = "../../../../MLModels"
         Private ModelPath As String = $"{BaseModelsPath}/IrisModel.zip"
 
-        Public Sub Main(args() As String)
+        Public Sub Main(ByVal args() As String)
             'Create the MLContext to share across components for deterministic results
             Dim mlContext As New MLContext(seed:=1) 'Seed set to any number so you have a deterministic environment
 
-            'STEP 1: Common data loading
-            Dim dataLoader As New DataLoader(mlContext)
-            Dim fullData = dataLoader.GetDataView(DataPath)
+            ' STEP 1: Common data loading configuration
+            Dim textLoader = CreateTextLoader(mlContext)
+            Dim fullData = textLoader.Read(DataPath)
 
             With mlContext.Clustering.TrainTestSplit(fullData, testFraction:=0.2)
+                Dim trainingDataView = .trainSet, testingDataView = .testSet
+
                 'STEP 2: Process data transformations in pipeline
-                Dim dataProcessor = New DataProcessor(mlContext)
-                Dim dataProcessPipeline = dataProcessor.DataProcessPipeline
+                Dim dataProcessPipeline = mlContext.Transforms.Concatenate("Features", "SepalLength", "SepalWidth", "PetalLength", "PetalWidth")
 
                 ' (Optional) Peek data in training DataView after applying the ProcessPipeline's transformations  
-                PeekDataViewInConsole(Of IrisData)(mlContext, .trainSet, dataProcessPipeline, 10)
-                PeekVectorColumnDataInConsole(mlContext, "Features", .trainSet, dataProcessPipeline, 10)
+                PeekDataViewInConsole(Of IrisData)(mlContext, trainingDataView, dataProcessPipeline, 10)
+                PeekVectorColumnDataInConsole(mlContext, "Features", trainingDataView, dataProcessPipeline, 10)
 
                 ' STEP 3: Create and train the model                
                 Dim modelBuilder = New ModelBuilder(Of IrisData, IrisPrediction)(mlContext, dataProcessPipeline)
                 Dim trainer = mlContext.Clustering.Trainers.KMeans(features:="Features", clustersCount:=3)
                 modelBuilder.AddTrainer(trainer)
-                Dim trainedModel = modelBuilder.Train(.trainSet)
+                Dim trainedModel = modelBuilder.Train(trainingDataView)
 
                 ' STEP4: Evaluate accuracy of the model
-                Dim metrics = modelBuilder.EvaluateClusteringModel(.testSet)
+                Dim metrics = modelBuilder.EvaluateClusteringModel(testingDataView)
                 PrintClusteringMetrics(trainer.ToString(), metrics)
 
                 ' STEP5: Save/persist the model as a .ZIP file
