@@ -1,5 +1,6 @@
 ﻿Imports System.IO
 Imports PLplot
+Imports Microsoft.ML.Runtime.Data
 Imports Microsoft.ML
 Imports Microsoft.ML.Core.Data
 Imports Regression_TaxiFarePrediction.DataStructures
@@ -38,13 +39,12 @@ Namespace Regression_TaxiFarePrediction
 
         Private Function BuildTrainEvaluateAndSaveModel(mlContext As MLContext) As ITransformer
             ' STEP 1: Common data loading configuration
-            Dim dataLoader As New DataLoader(mlContext)
-            Dim trainingDataView = dataLoader.GetDataView(TrainDataPath)
-            Dim testDataView = dataLoader.GetDataView(TestDataPath)
+            Dim textLoader = CreateTextLoader(mlContext)
+            Dim trainingDataView = textLoader.Read(TrainDataPath)
+            Dim testDataView = textLoader.Read(TestDataPath)
 
             ' STEP 2: Common data process configuration with pipeline data transformations
-            Dim dataProcessor = New DataProcessor(mlContext)
-            Dim dataProcessPipeline = dataProcessor.DataProcessPipeline
+            Dim dataProcessPipeline = TaxiFareDataProcessPipelineFactory.CreateDataProcessPipeline(mlContext)
 
             ' (OPTIONAL) Peek data (such as 5 records) in training DataView after applying the ProcessPipeline's transformations into "Features" 
             Common.PeekDataViewInConsole(Of TaxiTrip)(mlContext, trainingDataView, dataProcessPipeline, 5)
@@ -101,10 +101,9 @@ Namespace Regression_TaxiFarePrediction
             Dim modelScorer = New Common.ModelScorer(Of TaxiTrip, TaxiTripFarePrediction)(mlContext)
             modelScorer.LoadModelFromZipFile(ModelPath)
 
-
             Dim chartFileName As String = ""
 
-            Using pl = New PLStream()
+            Using pl = New PLStream
                 ' use SVG backend and write to SineWaves.svg in current directory
                 If args.Length = 1 AndAlso args(0) = "svg" Then
                     pl.sdev("svg")
@@ -224,7 +223,7 @@ Namespace Regression_TaxiFarePrediction
                 pl.eop()
 
                 ' output version of PLplot
-                Dim verText As Object
+                Dim verText As Object = Nothing
                 pl.gver(verText)
                 Console.WriteLine("PLplot version " & verText)
 

@@ -1,16 +1,10 @@
 ﻿Imports Microsoft.ML
 Imports Microsoft.ML.Runtime.Data
 
-
 Namespace Regression_TaxiFarePrediction
-	Friend Class DataLoader
-		Private _mlContext As MLContext
-		Private _loader As TextLoader
-
-		Public Sub New(mlContext As MLContext)
-			_mlContext = mlContext
-
-			_loader = mlContext.Data.TextReader(New TextLoader.Arguments() With {
+	Public Module TaxiFareTextLoaderFactory
+		Public Function CreateTextLoader(mlContext As MLContext) As TextLoader
+			Dim textLoader As TextLoader = mlContext.Data.TextReader(New TextLoader.Arguments() With {
 				.Separator = ",",
 				.HasHeader = True,
 				.Column = {
@@ -23,11 +17,8 @@ Namespace Regression_TaxiFarePrediction
 					New TextLoader.Column("FareAmount", DataKind.R4, 6)
 				}
 			})
-		End Sub
-
-		Public Function GetDataView(filePath As String) As IDataView
-			Return _loader.Read(filePath)
+			Return textLoader
 		End Function
-	End Class
+	End Module
 End Namespace
 
