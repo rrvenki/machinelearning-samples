@@ -12,12 +12,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Import Include="Microsoft.VisualBasic" />
-    <Import Include="System.Collections.Generic" />
-    <Import Include="System.Collections" />
-    <Import Include="System.Diagnostics" />
-    <Import Include="System.Linq" />
-    <Import Include="System" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="assets\input\.gitignore" />
