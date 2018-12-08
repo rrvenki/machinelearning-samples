@@ -58,23 +58,23 @@ Namespace Common
             Console.WriteLine($"************************************************************")
         End Sub
 
-        Public Shared Sub PrintRegressionFoldsAverageMetrics(algorithmName As String, crossValidationResults() As (metrics as RegressionEvaluator.Result ,  model As ITransformer, scoredTestData As IDataView ))
-			dim L1 =From r in crossValidationResults Select r.metrics.L1 
-			dim L2 = From r in crossValidationResults Select r.metrics.L2
-			dim RMS = From r in crossValidationResults Select r.metrics.L1
-			dim lossFunction = From r in crossValidationResults Select r.metrics.LossFn
-			dim R2 = From r in crossValidationResults Select r.metrics.RSquared
+        Public Sub PrintRegressionFoldsAverageMetrics(algorithmName As String, crossValidationResults() As (metrics As RegressionEvaluator.Result, model As ITransformer, scoredTestData As IDataView))
+            Dim L1 = From r In crossValidationResults Select l = r.metrics.L1
+            Dim L2 = From r In crossValidationResults Select l = r.metrics.L2
+            Dim RMS = From r In crossValidationResults Select l = r.metrics.L1
+            Dim lossFunction = From r In crossValidationResults Select r.metrics.LossFn
+            Dim R2 = From r In crossValidationResults Select r.metrics.RSquared
 
-			Console.WriteLine($"*************************************************************************************************************")
-			Console.WriteLine($"*       Metrics for {algorithmName} Regression model      ")
-			Console.WriteLine($"*------------------------------------------------------------------------------------------------------------")
-			Console.WriteLine($"*       Average L1 Loss:    {L1.Average():0.###} ")
-			Console.WriteLine($"*       Average L2 Loss:    {L2.Average():0.###}  ")
-			Console.WriteLine($"*       Average RMS:          {RMS.Average():0.###}  ")
-			Console.WriteLine($"*       Average Loss Function: {lossFunction.Average():0.###}  ")
-			Console.WriteLine($"*       Average R-squared: {R2.Average():0.###}  ")
-			Console.WriteLine($"*************************************************************************************************************")
-		End Sub
+            Console.WriteLine($"*************************************************************************************************************")
+            Console.WriteLine($"*       Metrics for {algorithmName} Regression model      ")
+            Console.WriteLine($"*------------------------------------------------------------------------------------------------------------")
+            Console.WriteLine($"*       Average L1 Loss:    {L1.Average():0.###} ")
+            Console.WriteLine($"*       Average L2 Loss:    {L2.Average():0.###}  ")
+            Console.WriteLine($"*       Average RMS:          {RMS.Average():0.###}  ")
+            Console.WriteLine($"*       Average Loss Function: {lossFunction.Average():0.###}  ")
+            Console.WriteLine($"*       Average R-squared: {R2.Average():0.###}  ")
+            Console.WriteLine($"*************************************************************************************************************")
+        End Sub
 
         Public Sub PrintMulticlassClassificationFoldsAverageMetrics(algorithmName As String, crossValResults() As (metrics As MultiClassClassifierEvaluator.Result, model As ITransformer, scoredTestData As IDataView))
             Dim metricsInMultipleFolds = crossValResults.Select(Function(r) r.metrics)
