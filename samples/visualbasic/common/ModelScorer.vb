@@ -44,7 +44,7 @@ Namespace Common
 
         Public Function LoadModelFromZipFile(modelPath As String) As ITransformer
             Using stream = New FileStream(modelPath, FileMode.Open, FileAccess.Read, FileShare.Read)
-                TrainedModel = TransformerChain.LoadFrom(_mlContext, stream)
+                TrainedModel = _mlContext.Model.LoadFrom(_mlContext, stream)
             End Using
 
             ' Create prediction engine related to the loaded trained model
