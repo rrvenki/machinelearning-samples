@@ -51,6 +51,10 @@ Project("{778DAE3C-4631-46EA-AA77-85C1314464D9}") = "CreditCardFraudDetection.Tr
 EndProject
 Project("{778DAE3C-4631-46EA-AA77-85C1314464D9}") = "TaxiFarePrediction", "getting-started\Regression_TaxiFarePrediction\TaxiFarePrediction\TaxiFarePredictionConsoleApp\TaxiFarePrediction.vbproj", "{B9FB4986-4027-4E7A-AAD8-F11E84991D65}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MovieRecommendation.Solution", "MovieRecommendation.Solution", "{A47A04B6-1E38-41D6-A776-8FA7345C69B0}"
+EndProject
+Project("{778DAE3C-4631-46EA-AA77-85C1314464D9}") = "MovieRecommendation", "getting-started\MatrixFactorization_MovieRecommendation\MovieRecommendation\MovieRecommendation.vbproj", "{8425573E-08C5-4699-9682-16A6D8FFF61A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -113,6 +117,10 @@ Global
 		{B9FB4986-4027-4E7A-AAD8-F11E84991D65}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B9FB4986-4027-4E7A-AAD8-F11E84991D65}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B9FB4986-4027-4E7A-AAD8-F11E84991D65}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8425573E-08C5-4699-9682-16A6D8FFF61A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8425573E-08C5-4699-9682-16A6D8FFF61A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8425573E-08C5-4699-9682-16A6D8FFF61A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8425573E-08C5-4699-9682-16A6D8FFF61A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -132,6 +140,7 @@ Global
 		{EE499FBB-9A08-462D-B612-42B650FAD6DC} = {F9578CB4-AC2F-46A5-8A2C-D73D9DED5FC0}
 		{9C74A757-32ED-4EB2-BE5B-8668BD903E45} = {F9578CB4-AC2F-46A5-8A2C-D73D9DED5FC0}
 		{B9FB4986-4027-4E7A-AAD8-F11E84991D65} = {885A3FD5-8413-42ED-AF7D-1C7B5685563C}
+		{8425573E-08C5-4699-9682-16A6D8FFF61A} = {A47A04B6-1E38-41D6-A776-8FA7345C69B0}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {98369941-33DD-450C-A410-B9A91C8CDE91}
