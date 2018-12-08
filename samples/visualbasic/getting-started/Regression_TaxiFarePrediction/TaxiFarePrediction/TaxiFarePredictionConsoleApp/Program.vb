@@ -1,259 +1,304 @@
-﻿Imports System.IO
+﻿Imports System
+Imports System.IO
+Imports System.Collections.Generic
+Imports System.Linq
 Imports PLplot
+Imports System.Diagnostics
 Imports Microsoft.ML.Runtime.Data
+Imports Microsoft.ML.Runtime.Learners
 Imports Microsoft.ML
 Imports Microsoft.ML.Core.Data
+Imports Microsoft.ML.Transforms
+Imports Microsoft.ML.Transforms.Categorical
+Imports Microsoft.ML.Transforms.Normalizers
+Imports Microsoft.ML.Transforms.Normalizers.NormalizingEstimator
 Imports Regression_TaxiFarePrediction.DataStructures
+Imports Common
+Imports Microsoft.ML.Data
 
 Namespace Regression_TaxiFarePrediction
-    Friend Module Program
-        Private ReadOnly Property AppPath As String
-            Get
-                Return Path.GetDirectoryName(Environment.GetCommandLineArgs()(0))
-            End Get
-        End Property
+	Friend Module Program
+		Private ReadOnly Property AppPath() As String
+			Get
+				Return Path.GetDirectoryName(Environment.GetCommandLineArgs()(0))
+			End Get
+		End Property
 
-        Private BaseDatasetsLocation As String = "../../../../Data"
-        Private TrainDataPath As String = $"{BaseDatasetsLocation}/taxi-fare-train.csv"
-        Private TestDataPath As String = $"{BaseDatasetsLocation}/taxi-fare-test.csv"
+		Private BaseDatasetsLocation As String = "../../../../Data"
+		Private TrainDataPath As String = $"{BaseDatasetsLocation}/taxi-fare-train.csv"
+		Private TestDataPath As String = $"{BaseDatasetsLocation}/taxi-fare-test.csv"
 
-        Private BaseModelsPath As String = "../../../../MLModels"
-        Private ModelPath As String = $"{BaseModelsPath}/TaxiFareModel.zip"
+		Private BaseModelsPath As String = "../../../../MLModels"
+		Private ModelPath As String = $"{BaseModelsPath}/TaxiFareModel.zip"
 
-        Sub Main(args() As String) 'If args[0] == "svg" a vector-based chart will be created instead a .png chart
-            'Create ML Context with seed for repeteable/deterministic results
-            Dim mlContext As New MLContext(seed:=0)
+		Sub Main(ByVal args() As String) 'If args[0] == "svg" a vector-based chart will be created instead a .png chart
+			'Create ML Context with seed for repeteable/deterministic results
+			Dim mlContext As New MLContext(seed:= 0)
 
-            ' Create, Train, Evaluate and Save a model
-            BuildTrainEvaluateAndSaveModel(mlContext)
+			' Create, Train, Evaluate and Save a model
+			BuildTrainEvaluateAndSaveModel(mlContext)
 
-            ' Make a single test prediction loding the model from .ZIP file
-            TestSinglePrediction(mlContext)
+			' Make a single test prediction loding the model from .ZIP file
+			TestSinglePrediction(mlContext)
 
-            ' Paint regression distribution chart for a number of elements read from a Test DataSet file
-            PlotRegressionChart(mlContext, TestDataPath, 100, args)
+			' Paint regression distribution chart for a number of elements read from a Test DataSet file
+			PlotRegressionChart(mlContext, TestDataPath, 100, args)
 
-            Console.WriteLine("Press any key to exit..")
-            Console.ReadLine()
-        End Sub
+			Console.WriteLine("Press any key to exit..")
+			Console.ReadLine()
+		End Sub
 
-        Private Function BuildTrainEvaluateAndSaveModel(mlContext As MLContext) As ITransformer
-            ' STEP 1: Common data loading configuration
-            Dim textLoader = CreateTextLoader(mlContext)
-            Dim trainingDataView = textLoader.Read(TrainDataPath)
-            Dim testDataView = textLoader.Read(TestDataPath)
+		Private Function BuildTrainEvaluateAndSaveModel(ByVal mlContext As MLContext) As ITransformer
+			' STEP 1: Common data loading configuration
+			Dim textLoader As TextLoader = mlContext.Data.TextReader(New TextLoader.Arguments() With {
+				.Separator = ",",
+				.HasHeader = True,
+				.Column = {
+					New TextLoader.Column("VendorId", DataKind.Text, 0),
+					New TextLoader.Column("RateCode", DataKind.Text, 1),
+					New TextLoader.Column("PassengerCount", DataKind.R4, 2),
+					New TextLoader.Column("TripTime", DataKind.R4, 3),
+					New TextLoader.Column("TripDistance", DataKind.R4, 4),
+					New TextLoader.Column("PaymentType", DataKind.Text, 5),
+					New TextLoader.Column("FareAmount", DataKind.R4, 6)
+				}
+			})
 
-            ' STEP 2: Common data process configuration with pipeline data transformations
-            Dim dataProcessPipeline = TaxiFareDataProcessPipelineFactory.CreateDataProcessPipeline(mlContext)
+			Dim baseTrainingDataView As IDataView = textLoader.Read(TrainDataPath)
+			Dim testDataView As IDataView = textLoader.Read(TestDataPath)
 
-            ' (OPTIONAL) Peek data (such as 5 records) in training DataView after applying the ProcessPipeline's transformations into "Features" 
-            Common.PeekDataViewInConsole(Of TaxiTrip)(mlContext, trainingDataView, dataProcessPipeline, 5)
-            Common.PeekVectorColumnDataInConsole(mlContext, "Features", trainingDataView, dataProcessPipeline, 5)
+			'Sample code of removing extreme data like "outliers" for FareAmounts higher than $150 and lower than $1 which can be error-data 
+			Dim cnt = baseTrainingDataView.GetColumn(Of Single)(mlContext, "FareAmount").Count()
+			Dim trainingDataView As IDataView = mlContext.Data.FilterByColumn(baseTrainingDataView, "FareAmount", lowerBound:= 1, upperBound:= 150)
+			Dim cnt2 = trainingDataView.GetColumn(Of Single)(mlContext, "FareAmount").Count()
 
-            ' STEP 3: Set the training algorithm, then create and config the modelBuilder                            
-            Dim modelBuilder = New Common.ModelBuilder(Of TaxiTrip, TaxiTripFarePrediction)(mlContext, dataProcessPipeline)
-            ' We apply our selected Trainer (SDCA Regression algorithm)
-            Dim trainer = mlContext.Regression.Trainers.StochasticDualCoordinateAscent(label:="Label", features:="Features")
-            modelBuilder.AddTrainer(trainer)
+			' STEP 2: Common data process configuration with pipeline data transformations
+			Dim dataProcessPipeline = mlContext.Transforms.CopyColumns("FareAmount", "Label").Append(mlContext.Transforms.Categorical.OneHotEncoding("VendorId", "VendorIdEncoded")).Append(mlContext.Transforms.Categorical.OneHotEncoding("RateCode", "RateCodeEncoded")).Append(mlContext.Transforms.Categorical.OneHotEncoding("PaymentType", "PaymentTypeEncoded")).Append(mlContext.Transforms.Normalize(inputName:= "PassengerCount", mode:= NormalizerMode.MeanVariance)).Append(mlContext.Transforms.Normalize(inputName:= "TripTime", mode:= NormalizerMode.MeanVariance)).Append(mlContext.Transforms.Normalize(inputName:= "TripDistance", mode:= NormalizerMode.MeanVariance)).Append(mlContext.Transforms.Concatenate("Features", "VendorIdEncoded", "RateCodeEncoded", "PaymentTypeEncoded", "PassengerCount", "TripTime", "TripDistance"))
 
-            ' STEP 4: Train the model fitting to the DataSet
-            'The pipeline is trained on the dataset that has been loaded and transformed.
-            Console.WriteLine("=============== Training the model ===============")
-            modelBuilder.Train(trainingDataView)
+			' (OPTIONAL) Peek data (such as 5 records) in training DataView after applying the ProcessPipeline's transformations into "Features" 
+			ConsoleHelper.PeekDataViewInConsole(Of TaxiTrip)(mlContext, trainingDataView, dataProcessPipeline, 5)
+			ConsoleHelper.PeekVectorColumnDataInConsole(mlContext, "Features", trainingDataView, dataProcessPipeline, 5)
 
-            ' STEP 5: Evaluate the model and show accuracy stats
-            Console.WriteLine("===== Evaluating Model's accuracy with Test data =====")
-            Dim metrics = modelBuilder.EvaluateRegressionModel(testDataView, "Label", "Score")
-            Common.PrintRegressionMetrics(trainer.ToString(), metrics)
+			' STEP 3: Set the training algorithm, then create and config the modelBuilder - Selected Trainer (SDCA Regression algorithm)                            
+			Dim trainer = mlContext.Regression.Trainers.StochasticDualCoordinateAscent(labelColumn:= "Label", featureColumn:= "Features")
+			Dim trainingPipeline = dataProcessPipeline.Append(trainer)
 
-            ' STEP 6: Save/persist the trained model to a .ZIP file
-            Console.WriteLine("=============== Saving the model to a file ===============")
-            modelBuilder.SaveModelAsFile(ModelPath)
+			' STEP 4: Train the model fitting to the DataSet
+			'The pipeline is trained on the dataset that has been loaded and transformed.
+			Console.WriteLine("=============== Training the model ===============")
+			Dim trainedModel = trainingPipeline.Fit(trainingDataView)
 
-            Return modelBuilder.TrainedModel
-        End Function
+			' STEP 5: Evaluate the model and show accuracy stats
+			Console.WriteLine("===== Evaluating Model's accuracy with Test data =====")
 
-        Private Sub TestSinglePrediction(mlContext As MLContext)
-            'Sample: 
-            'vendor_id,rate_code,passenger_count,trip_time_in_secs,trip_distance,payment_type,fare_amount
-            'VTS,1,1,1140,3.75,CRD,15.5
+			Dim predictions As IDataView = trainedModel.Transform(testDataView)
+			Dim metrics = mlContext.Regression.Evaluate(predictions, label:= "Label", score:= "Score")
 
-            Dim taxiTripSample = New TaxiTrip() With {
-                .VendorId = "VTS",
-                .RateCode = "1",
-                .PassengerCount = 1,
-                .TripTime = 1140,
-                .TripDistance = 3.75F,
-                .PaymentType = "CRD",
-                .FareAmount = 0
-            }
+			Common.ConsoleHelper.PrintRegressionMetrics(trainer.ToString(), metrics)
 
-            Dim modelScorer = New Common.ModelScorer(Of TaxiTrip, TaxiTripFarePrediction)(mlContext)
-            modelScorer.LoadModelFromZipFile(ModelPath)
-            Dim resultprediction = modelScorer.PredictSingle(taxiTripSample)
+			' STEP 6: Save/persist the trained model to a .ZIP file
 
-            Console.WriteLine($"**********************************************************************")
-            Console.WriteLine($"Predicted fare: {resultprediction.FareAmount:0.####}, actual fare: 15.5")
-            Console.WriteLine($"**********************************************************************")
-        End Sub
+			Using fs = File.Create(ModelPath)
+				trainedModel.SaveTo(mlContext, fs)
+			End Using
 
-        Private Sub PlotRegressionChart(mlContext As MLContext, testDataSetPath As String, numberOfRecordsToRead As Integer, args() As String)
-            Dim modelScorer = New Common.ModelScorer(Of TaxiTrip, TaxiTripFarePrediction)(mlContext)
-            modelScorer.LoadModelFromZipFile(ModelPath)
+			Console.WriteLine("The model is saved to {0}", ModelPath)
 
-            Dim chartFileName As String = ""
+			Return trainedModel
+		End Function
 
-            Using pl = New PLStream
-                ' use SVG backend and write to SineWaves.svg in current directory
-                If args.Length = 1 AndAlso args(0) = "svg" Then
-                    pl.sdev("svg")
-                    chartFileName = "TaxiRegressionDistribution.svg"
-                    pl.sfnam(chartFileName)
-                Else
-                    pl.sdev("pngcairo")
-                    chartFileName = "TaxiRegressionDistribution.png"
-                    pl.sfnam(chartFileName)
-                End If
+		Private Sub TestSinglePrediction(ByVal mlContext As MLContext)
+			'Sample: 
+			'vendor_id,rate_code,passenger_count,trip_time_in_secs,trip_distance,payment_type,fare_amount
+			'VTS,1,1,1140,3.75,CRD,15.5
 
-                ' use white background with black foreground
-                pl.spal0("cmap0_alternate.pal")
+			Dim taxiTripSample = New TaxiTrip() With {
+				.VendorId = "VTS",
+				.RateCode = "1",
+				.PassengerCount = 1,
+				.TripTime = 1140,
+				.TripDistance = 3.75F,
+				.PaymentType = "CRD",
+				.FareAmount = 0
+			}
 
-                ' Initialize plplot
-                pl.init()
+			'''
+			Dim trainedModel As ITransformer
+			Using stream = New FileStream(ModelPath, FileMode.Open, FileAccess.Read, FileShare.Read)
+				trainedModel = mlContext.Model.Load(stream)
+			End Using
 
-                ' set axis limits
-                Const xMinLimit As Integer = 0
-                Const xMaxLimit As Integer = 35 'Rides larger than $35 are not shown in the chart
-                Const yMinLimit As Integer = 0
-                Const yMaxLimit As Integer = 35 'Rides larger than $35 are not shown in the chart
-                pl.env(xMinLimit, xMaxLimit, yMinLimit, yMaxLimit, AxesScale.Independent, AxisBox.BoxTicksLabelsAxes)
+			' Create prediction engine related to the loaded trained model
+			Dim predFunction = trainedModel.MakePredictionFunction(Of TaxiTrip, TaxiTripFarePrediction)(mlContext)
 
-                ' Set scaling for mail title text 125% size of default
-                pl.schr(0, 1.25)
+			'Score
+			Dim resultprediction = predFunction.Predict(taxiTripSample)
+			'''
 
-                ' The main title
-                pl.lab("Measured", "Predicted", "Distribution of Taxi Fare Prediction")
+			Console.WriteLine($"**********************************************************************")
+			Console.WriteLine($"Predicted fare: {resultprediction.FareAmount:0.####}, actual fare: 15.5")
+			Console.WriteLine($"**********************************************************************")
+		End Sub
 
-                ' plot using different colors
-                ' see http://plplot.sourceforge.net/examples.php?demo=02 for palette indices
-                pl.col0(1)
+		Private Sub PlotRegressionChart(ByVal mlContext As MLContext, ByVal testDataSetPath As String, ByVal numberOfRecordsToRead As Integer, ByVal args() As String)
+			Dim trainedModel As ITransformer
+			Using stream = New FileStream(ModelPath, FileMode.Open, FileAccess.Read, FileShare.Read)
+				trainedModel = mlContext.Model.Load(stream)
+			End Using
 
-                Dim totalNumber As Integer = numberOfRecordsToRead
-                Dim testData = (New TaxiTripCsvReader()).GetDataFromCsv(testDataSetPath, totalNumber).ToList()
+			' Create prediction engine related to the loaded trained model
+			Dim predFunction = trainedModel.MakePredictionFunction(Of TaxiTrip, TaxiTripFarePrediction)(mlContext)
 
-                'This code is the symbol to paint
-                Dim code As Char = ChrW(9)
+			Dim chartFileName As String = ""
+			Using pl = New PLStream()
+				' use SVG backend and write to SineWaves.svg in current directory
+				If args.Length = 1 AndAlso args(0) = "svg" Then
+					pl.sdev("svg")
+					chartFileName = "TaxiRegressionDistribution.svg"
+					pl.sfnam(chartFileName)
+				Else
+					pl.sdev("pngcairo")
+					chartFileName = "TaxiRegressionDistribution.png"
+					pl.sfnam(chartFileName)
+				End If
 
-                ' plot using other color
-                'pl.col0(9); //Light Green
-                'pl.col0(4); //Red
-                pl.col0(2) 'Blue
+				' use white background with black foreground
+				pl.spal0("cmap0_alternate.pal")
 
-                Dim yTotal As Double = 0
-                Dim xTotal As Double = 0
-                Dim xyMultiTotal As Double = 0
-                Dim xSquareTotal As Double = 0
+				' Initialize plplot
+				pl.init()
 
-                For i As Integer = 0 To testData.Count - 1
-                    Dim x = New Double(0) {}
-                    Dim y = New Double(0) {}
+				' set axis limits
+				Const xMinLimit As Integer = 0
+				Const xMaxLimit As Integer = 35 'Rides larger than $35 are not shown in the chart
+				Const yMinLimit As Integer = 0
+				Const yMaxLimit As Integer = 35 'Rides larger than $35 are not shown in the chart
+				pl.env(xMinLimit, xMaxLimit, yMinLimit, yMaxLimit, AxesScale.Independent, AxisBox.BoxTicksLabelsAxes)
 
-                    'Make Prediction
+				' Set scaling for mail title text 125% size of default
+				pl.schr(0, 1.25)
 
-                    Dim FarePrediction = modelScorer.PredictSingle(testData(i))
-                    'var FarePrediction = engine.Predict(testData[i]);
+				' The main title
+				pl.lab("Measured", "Predicted", "Distribution of Taxi Fare Prediction")
 
-                    x(0) = testData(i).FareAmount
-                    y(0) = FarePrediction.FareAmount
+				' plot using different colors
+				' see http://plplot.sourceforge.net/examples.php?demo=02 for palette indices
+				pl.col0(1)
 
-                    'Paint a dot
-                    pl.poin(x, y, code)
+				Dim totalNumber As Integer = numberOfRecordsToRead
+				Dim testData = (New TaxiTripCsvReader()).GetDataFromCsv(testDataSetPath, totalNumber).ToList()
 
-                    xTotal += x(0)
-                    yTotal += y(0)
+				'This code is the symbol to paint
+				Dim code As Char = ChrW(9)
 
-                    Dim multi As Double = x(0) * y(0)
-                    xyMultiTotal += multi
+				' plot using other color
+				'pl.col0(9); //Light Green
+				'pl.col0(4); //Red
+				pl.col0(2) 'Blue
 
-                    Dim xSquare As Double = x(0) * x(0)
-                    xSquareTotal += xSquare
+				Dim yTotal As Double = 0
+				Dim xTotal As Double = 0
+				Dim xyMultiTotal As Double = 0
+				Dim xSquareTotal As Double = 0
 
-                    Dim ySquare As Double = y(0) * y(0)
+				For i As Integer = 0 To testData.Count - 1
+					Dim x = New Double(0){}
+					Dim y = New Double(0){}
 
-                    Console.WriteLine($"-------------------------------------------------")
-                    Console.WriteLine($"Predicted : {FarePrediction.FareAmount}")
-                    Console.WriteLine($"Actual:    {testData(i).FareAmount}")
-                    Console.WriteLine($"-------------------------------------------------")
-                Next i
+					'Make Prediction
+					Dim FarePrediction = predFunction.Predict(testData(i))
 
-                ' Regression Line calculation explanation:
-                ' https://www.khanacademy.org/math/statistics-probability/describing-relationships-quantitative-data/more-on-regression/v/regression-line-example
+					x(0) = testData(i).FareAmount
+					y(0) = FarePrediction.FareAmount
 
-                Dim minY As Double = yTotal / totalNumber
-                Dim minX As Double = xTotal / totalNumber
-                Dim minXY As Double = xyMultiTotal / totalNumber
-                Dim minXsquare As Double = xSquareTotal / totalNumber
+					'Paint a dot
+					pl.poin(x, y, code)
 
-                Dim m As Double = ((minX * minY) - minXY) / ((minX * minX) - minXsquare)
+					xTotal += x(0)
+					yTotal += y(0)
 
-                Dim b As Double = minY - (m * minX)
+					Dim multi As Double = x(0) * y(0)
+					xyMultiTotal += multi
 
-                'Generic function for Y for the regression line
-                ' y = (m * x) + b;
+					Dim xSquare As Double = x(0) * x(0)
+					xSquareTotal += xSquare
 
-                Dim x1 As Double = 1
-                'Function for Y1 in the line
-                Dim y1 As Double = (m * x1) + b
+					Dim ySquare As Double = y(0) * y(0)
 
-                Dim x2 As Double = 39
-                'Function for Y2 in the line
-                Dim y2 As Double = (m * x2) + b
+					Console.WriteLine($"-------------------------------------------------")
+					Console.WriteLine($"Predicted : {FarePrediction.FareAmount}")
+					Console.WriteLine($"Actual:    {testData(i).FareAmount}")
+					Console.WriteLine($"-------------------------------------------------")
+				Next i
 
-                Dim xArray = New Double(1) {}
-                Dim yArray = New Double(1) {}
-                xArray(0) = x1
-                yArray(0) = y1
-                xArray(1) = x2
-                yArray(1) = y2
+				' Regression Line calculation explanation:
+				' https://www.khanacademy.org/math/statistics-probability/describing-relationships-quantitative-data/more-on-regression/v/regression-line-example
 
-                pl.col0(4)
-                pl.line(xArray, yArray)
+				Dim minY As Double = yTotal / totalNumber
+				Dim minX As Double = xTotal / totalNumber
+				Dim minXY As Double = xyMultiTotal / totalNumber
+				Dim minXsquare As Double = xSquareTotal / totalNumber
 
-                ' end page (writes output to disk)
-                pl.eop()
+				Dim m As Double = ((minX * minY) - minXY) / ((minX * minX) - minXsquare)
 
-                ' output version of PLplot
-                Dim verText As Object = Nothing
-                pl.gver(verText)
-                Console.WriteLine("PLplot version " & verText)
+				Dim b As Double = minY - (m * minX)
 
-            End Using ' the pl object is disposed here
+				'Generic function for Y for the regression line
+				' y = (m * x) + b;
 
-            ' Open Chart File In Microsoft Photos App (Or default app, like browser for .svg)
+				Dim x1 As Double = 1
+				'Function for Y1 in the line
+				Dim y1 As Double = (m * x1) + b
 
-            Console.WriteLine("Showing chart...")
-            Dim p = New Process()
-            Dim chartFileNamePath As String = ".\" & chartFileName
-            p.StartInfo = New ProcessStartInfo(chartFileNamePath) With {.UseShellExecute = True}
-            p.Start()
-        End Sub
+				Dim x2 As Double = 39
+				'Function for Y2 in the line
+				Dim y2 As Double = (m * x2) + b
 
-    End Module
+				Dim xArray = New Double(1){}
+				Dim yArray = New Double(1){}
+				xArray(0) = x1
+				yArray(0) = y1
+				xArray(1) = x2
+				yArray(1) = y2
 
-    Public Class TaxiTripCsvReader
-        Public Function GetDataFromCsv(dataLocation As String, numMaxRecords As Integer) As IEnumerable(Of TaxiTrip)
-            Dim records As IEnumerable(Of TaxiTrip) = File.ReadAllLines(dataLocation).Skip(1).Select(Function(x) x.Split(","c)).Select(Function(x) New TaxiTrip() With {
-                .VendorId = x(0),
-                .RateCode = x(1),
-                .PassengerCount = Single.Parse(x(2)),
-                .TripTime = Single.Parse(x(3)),
-                .TripDistance = Single.Parse(x(4)),
-                .PaymentType = x(5),
-                .FareAmount = Single.Parse(x(6))
-            }).Take(numMaxRecords)
+				pl.col0(4)
+				pl.line(xArray, yArray)
 
-            Return records
-        End Function
-    End Class
+				' end page (writes output to disk)
+				pl.eop()
+
+				' output version of PLplot
+				Dim verText As Object
+				pl.gver(verText)
+				Console.WriteLine("PLplot version " & verText)
+
+			End Using ' the pl object is disposed here
+
+			' Open Chart File In Microsoft Photos App (Or default app, like browser for .svg)
+
+			Console.WriteLine("Showing chart...")
+			Dim p = New Process()
+			Dim chartFileNamePath As String = ".\" & chartFileName
+			p.StartInfo = New ProcessStartInfo(chartFileNamePath) With {.UseShellExecute = True}
+			p.Start()
+		End Sub
+
+	End Module
+
+	Public Class TaxiTripCsvReader
+		Public Function GetDataFromCsv(ByVal dataLocation As String, ByVal numMaxRecords As Integer) As IEnumerable(Of TaxiTrip)
+			Dim records As IEnumerable(Of TaxiTrip) = File.ReadAllLines(dataLocation).Skip(1).Select(Function(x) x.Split(","c)).Select(Function(x) New TaxiTrip() With {
+				.VendorId = x(0),
+				.RateCode = x(1),
+				.PassengerCount = Single.Parse(x(2)),
+				.TripTime = Single.Parse(x(3)),
+				.TripDistance = Single.Parse(x(4)),
+				.PaymentType = x(5),
+				.FareAmount = Single.Parse(x(6))
+			}).Take(numMaxRecords)
+
+			Return records
+		End Function
+	End Class
 
 End Namespace
