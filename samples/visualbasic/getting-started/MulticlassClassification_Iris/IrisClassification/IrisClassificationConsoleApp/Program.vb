@@ -45,7 +45,7 @@ Namespace MulticlassClassification_Iris
             ' STEP 3: Set the training algorithm, then create and config the modelBuilder                            
             Dim modelBuilder = New Common.ModelBuilder(Of IrisData, IrisPrediction)(mlContext, dataProcessPipeline)
             ' We apply our selected Trainer 
-            Dim trainer = mlContext.MulticlassClassification.Trainers.StochasticDualCoordinateAscent(label:="Label", features:="Features")
+            Dim trainer = mlContext.MulticlassClassification.Trainers.StochasticDualCoordinateAscent(labelColumn:="Label", featureColumn:="Features")
             modelBuilder.AddTrainer(trainer)
 
             ' STEP 4: Train the model fitting to the DataSet
