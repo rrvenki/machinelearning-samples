@@ -43,7 +43,7 @@ Namespace CustomerSegmentation.DataStructures
 			Return $"{C1},{C2},{C3},{C4},{C5},{C6},{C7},{C8},{C9}," + $"{C10},{C11},{C12},{C13},{C14},{C15},{C16},{C17},{C18},{C19}," + $"{C20},{C21},{C22},{C23},{C24},{C25},{C26},{C27},{C28},{C29}," + $"{C30},{C31},{C32},{LastName}"
 		End Function
 
-		Public Shared Sub SaveToCsv(salesData As IEnumerable(Of PivotData), file As String)
+		Public Shared Sub SaveToCsv(ByVal salesData As IEnumerable(Of PivotData), ByVal file As String)
 			Dim columns = "C1,C2,C3,C4,C5,C6,C7,C8,C9," &
 						  "C10,C11,C12,C13,C14,C15,C16,C17,C18,C19," &
 						  "C20,C21,C22,C23,C24,C25,C26,C27,C28,C29," &

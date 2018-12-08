@@ -22,16 +22,16 @@ Namespace CustomerSegmentation.Model
 		Private ReadOnly _mlContext As MLContext
 		Private _trainedModel As ITransformer
 
-		Public Sub New(mlContext As MLContext, pivotDataLocation As String, plotLocation As String, csvlocation As String)
+		Public Sub New(ByVal mlContext As MLContext, ByVal pivotDataLocation As String, ByVal plotLocation As String, ByVal csvlocation As String)
 			_pivotDataLocation = pivotDataLocation
 			_plotLocation = plotLocation
 			_csvlocation = csvlocation
 			_mlContext = mlContext
 		End Sub
 
-		Public Function LoadModelFromZipFile(modelPath As String) As ITransformer
+		Public Function LoadModelFromZipFile(ByVal modelPath As String) As ITransformer
 			Using stream = New FileStream(modelPath, FileMode.Open, FileAccess.Read, FileShare.Read)
-				_trainedModel = TransformerChain.LoadFrom(_mlContext, stream)
+				_trainedModel = _mlContext.Model.Load(stream)
 			End Using
 
 			Return _trainedModel
@@ -47,7 +47,7 @@ Namespace CustomerSegmentation.Model
 				.Separator = ","
 			})
 
-			Dim data = reader.Read(New MultiFileSource(_pivotDataLocation))
+			Dim data = reader.Read(_pivotDataLocation)
 
 			'Apply data transformation to create predictions/clustering
 			Dim predictions = _trainedModel.Transform(data).AsEnumerable(Of ClusteringPrediction)(_mlContext, False).ToArray()
@@ -58,10 +58,9 @@ Namespace CustomerSegmentation.Model
 			'Plot/paint the clusters in a chart and open it with the by-default image-tool in Windows
 			SaveCustomerSegmentationPlotChart(predictions, _plotLocation)
 			OpenChartInDefaultWindow(_plotLocation)
-
 		End Sub
 
-		Private Shared Sub SaveCustomerSegmentationCSV(predictions As IEnumerable(Of ClusteringPrediction), csvlocation As String)
+		Private Shared Sub SaveCustomerSegmentationCSV(ByVal predictions As IEnumerable(Of ClusteringPrediction), ByVal csvlocation As String)
 			ConsoleHelper.ConsoleWriteHeader("CSV Customer Segmentation")
 			Using w = New System.IO.StreamWriter(csvlocation)
 				w.WriteLine($"LastName,SelectedClusterId")
@@ -75,7 +74,7 @@ Namespace CustomerSegmentation.Model
 			Console.WriteLine($"CSV location: {csvlocation}")
 		End Sub
 
-		Private Shared Sub SaveCustomerSegmentationPlotChart(predictions As IEnumerable(Of ClusteringPrediction), plotLocation As String)
+		Private Shared Sub SaveCustomerSegmentationPlotChart(ByVal predictions As IEnumerable(Of ClusteringPrediction), ByVal plotLocation As String)
 			Common.ConsoleHelper.ConsoleWriteHeader("Plot Customer Segmentation")
 
 			Dim plot = New PlotModel With {
@@ -110,7 +109,7 @@ Namespace CustomerSegmentation.Model
 			Console.WriteLine($"Plot location: {plotLocation}")
 		End Sub
 
-		Private Shared Sub OpenChartInDefaultWindow(plotLocation As String)
+		Private Shared Sub OpenChartInDefaultWindow(ByVal plotLocation As String)
 			Console.WriteLine("Showing chart...")
 			Dim p = New Process()
 			p.StartInfo = New ProcessStartInfo(plotLocation) With {.UseShellExecute = True}

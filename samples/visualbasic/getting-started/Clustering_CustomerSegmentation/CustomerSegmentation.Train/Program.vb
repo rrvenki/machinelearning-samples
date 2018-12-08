@@ -9,11 +9,12 @@ Imports Microsoft.ML.Transforms.Categorical
 Imports Microsoft.ML.Transforms.Projections
 
 Imports CustomerSegmentation.DataStructures
+Imports Common
 
 Namespace CustomerSegmentation
 	Public Class Program
-		Shared Sub Main(args() As String)
-			Dim assetsPath = ModelHelpers.GetAssetsPath("..\..\..\assets")
+		Shared Sub Main(ByVal args() As String)
+			Dim assetsPath = PathHelper.GetAssetsPath("..\..\..\assets")
 
 			Dim transactionsCsv = Path.Combine(assetsPath, "inputs", "transactions.csv")
 			Dim offersCsv = Path.Combine(assetsPath, "inputs", "offers.csv")
@@ -28,28 +29,44 @@ Namespace CustomerSegmentation
 				Dim mlContext As New MLContext(seed:= 1) 'Seed set to any number so you have a deterministic environment
 
 				' STEP 1: Common data loading configuration
-				Dim textLoader = CustomerSegmentationTextLoaderFactory.CreateTextLoader(mlContext)
+				Dim textLoader As TextLoader = mlContext.Data.TextReader(New TextLoader.Arguments() With {
+					.Separator = ",",
+					.HasHeader = True,
+					.Column = {
+						New TextLoader.Column("Features", DataKind.R4, New TextLoader.Range() {New TextLoader.Range(0, 31) }),
+						New TextLoader.Column("LastName", DataKind.Text, 32)
+					}
+				})
+
 				Dim pivotDataView = textLoader.Read(pivotCsv)
 
 				'STEP 2: Configure data transformations in pipeline
-				Dim dataProcessPipeline = (New PrincipalComponentAnalysisEstimator(mlContext, "Features", "PCAFeatures", rank:= 2)).Append(New OneHotEncodingEstimator(mlContext, { New OneHotEncodingEstimator.ColumnInfo("LastName", "LastNameKey", CategoricalTransform.OutputKind.Ind) }))
+				Dim dataProcessPipeline = (New PrincipalComponentAnalysisEstimator(mlContext, "Features", "PCAFeatures", rank:= 2)).Append(New OneHotEncodingEstimator(mlContext, { New OneHotEncodingEstimator.ColumnInfo("LastName", "LastNameKey", OneHotEncodingTransformer.OutputKind.Ind) }))
 				' (Optional) Peek data in training DataView after applying the ProcessPipeline's transformations  
 				Common.ConsoleHelper.PeekDataViewInConsole(Of PivotObservation)(mlContext, pivotDataView, dataProcessPipeline, 10)
 				Common.ConsoleHelper.PeekVectorColumnDataInConsole(mlContext, "Features", pivotDataView, dataProcessPipeline, 10)
 
-				' STEP 3: Create and train the model                
+				'STEP 3: Create the training pipeline                
 				Dim trainer = mlContext.Clustering.Trainers.KMeans("Features", clustersCount:= 3)
-				Dim modelBuilder = New Common.ModelBuilder(Of PivotObservation, ClusteringPrediction)(mlContext, dataProcessPipeline)
-				modelBuilder.AddTrainer(trainer)
-				Dim trainedModel = modelBuilder.Train(pivotDataView)
+				Dim trainingPipeline = dataProcessPipeline.Append(trainer)
 
-				' STEP4: Evaluate accuracy of the model
-				Dim metrics = modelBuilder.EvaluateClusteringModel(pivotDataView)
-				Common.ConsoleHelper.PrintClusteringMetrics(trainer.ToString(), metrics)
+				'STEP 4: Train the model fitting to the pivotDataView
+				Console.WriteLine("=============== Training the model ===============")
+				Dim trainedModel As ITransformer = trainingPipeline.Fit(pivotDataView)
 
-				' STEP5: Save/persist the model as a .ZIP file
-				modelBuilder.SaveModelAsFile(modelZip)
+				'STEP 5: Evaluate the model and show accuracy stats
+				Console.WriteLine("===== Evaluating Model's accuracy with Test data =====")
+				Dim predictions = trainedModel.Transform(pivotDataView)
+				Dim metrics = mlContext.Clustering.Evaluate(predictions, score:= "Score", features:= "Features")
 
+				ConsoleHelper.PrintClusteringMetrics(trainer.ToString(), metrics)
+
+				'STEP 6: Save/persist the trained model to a .ZIP file
+				Using fs = New FileStream(modelZip, FileMode.Create, FileAccess.Write, FileShare.Write)
+					mlContext.Model.Save(trainedModel, fs)
+				End Using
+
+				Console.WriteLine("The model is saved to {0}", modelZip)
 			Catch ex As Exception
 				Common.ConsoleHelper.ConsoleWriteException(ex.Message)
 			End Try
