@@ -1,11 +1,13 @@
-﻿Namespace MulticlassClassification_Iris.DataStructures
-    Public Class IrisData
-        Public SepalLength As Single
+﻿Imports Microsoft.ML.Runtime.Api
 
-        Public SepalWidth As Single
+Namespace MulticlassClassification_Iris.DataStructures
+	Public Class IrisData
+		Public SepalLength As Single
 
-        Public PetalLength As Single
+		Public SepalWidth As Single
 
-        Public PetalWidth As Single
-    End Class
+		Public PetalLength As Single
+
+		Public PetalWidth As Single
+	End Class
 End Namespace
