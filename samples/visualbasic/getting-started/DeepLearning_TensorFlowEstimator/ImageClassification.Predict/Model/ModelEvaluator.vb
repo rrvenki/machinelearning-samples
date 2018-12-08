@@ -5,7 +5,7 @@ Imports Microsoft.ML.Runtime.Data
 Imports Microsoft.ML.Runtime
 
 Namespace ImageClassification.Model
-    Public Class ModelEvaluator
+    Public Class ModelScorer
         Private ReadOnly dataLocation As String
         Private ReadOnly imagesFolder As String
         Private ReadOnly modelLocation As String
@@ -18,7 +18,7 @@ Namespace ImageClassification.Model
             env = New ConsoleEnvironment(seed:=1)
         End Sub
 
-        Public Sub EvaluateStaticApi()
+        Public Sub ClassifyImages()
             ConsoleWriteHeader("Loading model")
             Console.WriteLine($"Model loaded: {modelLocation}")
 

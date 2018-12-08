@@ -13,8 +13,8 @@ Namespace ImageClassification.Predict
             Dim imageClassifierZip = Path.Combine(assetsPath, "inputs", "imageClassifier.zip")
 
             Try
-                Dim modelEvaluator = New ModelEvaluator(tagsTsv, imagesFolder, imageClassifierZip)
-                modelEvaluator.EvaluateStaticApi()
+                Dim modelScorer = New ModelScorer(tagsTsv, imagesFolder, imageClassifierZip)
+                modelScorer.ClassifyImages()
             Catch ex As Exception
                 ConsoleWriteException(ex.Message)
             End Try
